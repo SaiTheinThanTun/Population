@@ -23,8 +23,12 @@ timesteps <- 28*2 #365*2
 #this also needs to be changed during the subsequent timesteps
 m <- M/H
 z <- Z/M
+x <- X/H #ratio of infectious humans
+
 lam_h <- m*a*b*z
 #lam_h <- 0.075
+
+lam <- a*c*x #lambda for mosquitos
 
 
 #synthesizing a population
@@ -89,7 +93,8 @@ write.csv(df, file='0.csv')
 
 
 #subsequent timesteps
-
+summ_tab <-  # summary table for plotting
+  
 for(j in 1:timesteps){
   
   for(i in 1:nrow(df)){
@@ -97,38 +102,40 @@ for(j in 1:timesteps){
       df[i,3] <- df[i,6] <- 1 #denoting this person is infected on this timestep
     }
     
-    if(df[i,3] && df[i,6]){ #if infected #at current timestep 
-      
+    if(df[i,3]==1 && df[i,6]==1){ #if infected #at current timestep 
       
       df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
-      
       
     }
     
     df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
+    
+    if(df[i,4]<=0 && df[i,3]==1){ #infected at current step, but durinf is over
+      df[i,3] <- 0
+    }
+    
+    #resetting for the next round
     df[i,5] <- runif(1) #drawing random no. for each individual
     df[i,6] <- 0 # resetting 'infected at current timestep'
   }
   #at the end of big for loop
   #calculate lam_h
+  X <- sum(df[,3])
+  x <- X/H #ratio of infectious humans
+  #rate of change of Z from ODE
+  lam <- a*c*x
+  Z <- Z+lam*(M-Z)
   
   #m <- M/H ###no. of mosquitos doesn't change FOR NOW
-  z <- Z/M
-  #rate of change of Z from ODE
   
+  z <- Z/M
   lam_h <- m*a*b*z
   
-  write.csv(df, file=paste(j,".csv",sep=""))
-}
-if('S'){
-  if(runif() > prob.ds)
-  {
-    thatman <- 'X'
+  if(j<10 | j>(max(timesteps)-10)){
+    write.csv(df, file=paste(j,".csv",sep=""))
   }
-} else
-{
-  
 }
+
 
 
 #infected var

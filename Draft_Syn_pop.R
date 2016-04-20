@@ -32,14 +32,14 @@ lam <- a*c*x #lambda for mosquitos
 
 
 #synthesizing a population
-pop_size <- 5000
+#pop_size <- 5000
 
 #age, 98+ were unaccounted for
 age <- 0:97
 
 
 
-sim_age <- sample(age, pop_size, replace=TRUE,prob=age_prob_0to97[,1])
+sim_age <- sample(age, H, replace=TRUE,prob=age_prob_0to97[,1])
 hist(sim_age) 
 
 #gender
@@ -63,15 +63,15 @@ qplot(s_age, data=tmp,fill=s_gender)
 #for(i in 1:pop_size){
 #  malaria[i] <- sample(c("S","I","R"),1, prob=c(.7,.1,.2))
 #}
-infected_h <- rep(NA,pop_size)
-for(i in 1:pop_size){
+infected_h <- rep(NA,H)
+for(i in 1:H){
   infected_h[i] <- sample(c(0,1),1, prob=c(.8,.2))
 }
 
-tts <- rep(0, pop_size) #time to become susceptable, 1/dur_inf in normal distribution
+tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
 
-random_no <- runif(5000) # random uniform no. to decide the prob. of being infected if susceptable
-current <- rep(1, pop_size) #infected in current timestep
+random_no <- runif(H) # random uniform no. to decide the prob. of being infected if susceptable
+current <- rep(1, H) #infected in current timestep
 
 df <- cbind(sim_age,gender,infected_h, tts, random_no, current)
 
@@ -134,14 +134,32 @@ for(j in 1:timesteps){
   
   #writing a summary table
   summ_tab[j,1] <- j
-  summ_tab[j,2] <- X
-  summ_tab[j,3] <- H-X
+  summ_tab[j,2] <- H-X
+  summ_tab[j,3] <- X
   
   if(j<10 | j>(max(timesteps)-10)){
     write.csv(df, file=paste(j,".csv",sep=""))
   }
 }
 
+
+#plotting
+par(mar=c(5,4,4,4))
+plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
+axis(2, ylim=c(0,17),col="blue") 
+mtext("Susceptible humans",side=2,line=2.5) 
+
+box()
+par(new=TRUE)
+plot(summ_tab[,1],summ_tab[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
+axis(4, ylim=c(0,17),col="red") 
+mtext("Infected humans",side=4, line=2.5)
+
+axis(1,pretty(range(summ_tab[,1]),10))
+mtext("Time (Weeks)",side=1,col="black",line=2.5)
+
+legend("top",legend=c("Susceptibles","Infected"),
+       text.col=c("blue","red"),pch= "__", col=c("blue","red"))
 
 
 #infected var

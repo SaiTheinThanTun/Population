@@ -93,7 +93,8 @@ write.csv(df, file='0.csv')
 
 
 #subsequent timesteps
-summ_tab <-  # summary table for plotting
+summ_tab <- matrix(NA, nrow=timesteps, ncol=3) # summary table for plotting
+colnames(summ_tab) <- c('timesteps','susceptables','infected')
   
 for(j in 1:timesteps){
   
@@ -120,7 +121,7 @@ for(j in 1:timesteps){
   }
   #at the end of big for loop
   #calculate lam_h
-  X <- sum(df[,3])
+  X <- sum(df[,3]) #no. of infected humans
   x <- X/H #ratio of infectious humans
   #rate of change of Z from ODE
   lam <- a*c*x
@@ -130,6 +131,11 @@ for(j in 1:timesteps){
   
   z <- Z/M
   lam_h <- m*a*b*z
+  
+  #writing a summary table
+  summ_tab[j,1] <- j
+  summ_tab[j,2] <- X
+  summ_tab[j,3] <- H-X
   
   if(j<10 | j>(max(timesteps)-10)){
     write.csv(df, file=paste(j,".csv",sep=""))

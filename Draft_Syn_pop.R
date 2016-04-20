@@ -18,7 +18,8 @@ H <- 80 #human population
 X <- 30 #infected humans
 M <- 800 #initial mosquito population
 Z <- 200 #initial infected mosquitos
-timesteps <- 28*2 #365*2 
+timesteps_days <- 28
+timesteps <- timesteps_days*2 #365*2 
 
 #this also needs to be changed during the subsequent timesteps
 m <- M/H
@@ -95,6 +96,9 @@ write.csv(df, file='0.csv')
 #subsequent timesteps
 summ_tab <- matrix(NA, nrow=timesteps, ncol=3) # summary table for plotting
 colnames(summ_tab) <- c('timesteps','susceptables','infected')
+
+#there's an error which one to take as time 0 (or 0.5)
+summ_tab[,1] <- seq(0.5,timesteps_days,by=(1/2))
   
 for(j in 1:timesteps){
   
@@ -133,7 +137,7 @@ for(j in 1:timesteps){
   lam_h <- m*a*b*z
   
   #writing a summary table
-  summ_tab[j,1] <- j
+  #summ_tab[j,1] <- j
   summ_tab[j,2] <- H-X
   summ_tab[j,3] <- X
   
@@ -156,7 +160,7 @@ axis(4, ylim=c(0,17),col="red")
 mtext("Infected humans",side=4, line=2.5)
 
 axis(1,pretty(range(summ_tab[,1]),10))
-mtext("Time (Weeks)",side=1,col="black",line=2.5)
+mtext("Time (0.5 days)",side=1,col="black",line=2.5)
 
 legend("top",legend=c("Susceptibles","Infected"),
        text.col=c("blue","red"),pch= "__", col=c("blue","red"))

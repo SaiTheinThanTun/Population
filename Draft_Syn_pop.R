@@ -76,6 +76,15 @@ current <- rep(1, H) #infected in current timestep
 
 df <- cbind(sim_age,gender,infected_h, tts, random_no, current)
 
+#codebook for df
+#1. sim_age
+#2. gender
+#3. infected_h
+#4. tts #time to become susceptible again
+#5. random_n #random no. drawn from uniform distribution
+#6. current #a switch to detect if an individual is infected in current timestep or not
+
+
 #initializing
 for(i in 1:nrow(df)){
   if(df[i,3] && df[i,6]){ #if infected #at current timestep 
@@ -94,8 +103,8 @@ write.csv(df, file='0.csv')
 
 
 #subsequent timesteps
-summ_tab <- matrix(NA, nrow=timesteps, ncol=6) # summary table for plotting
-colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','lam','Z')
+summ_tab <- matrix(NA, nrow=timesteps, ncol=7) # summary table for plotting
+colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','M','Z','lam')
 
 #there's an error which one to take as time 0 (or 0.5)
 summ_tab[,1] <- seq(0.5,timesteps_days,by=(1/2))
@@ -141,8 +150,9 @@ for(j in 1:timesteps){
   summ_tab[j,2] <- H-X
   summ_tab[j,3] <- X
   summ_tab[j,4] <-lam_h
-  summ_tab[j,5] <- lam 
+  summ_tab[j,5] <- M 
   summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
+  summ_tab[j,7] <- lam
   
   if(j<10 | j>(max(timesteps)-10)){
     write.csv(df, file=paste(j,".csv",sep=""))

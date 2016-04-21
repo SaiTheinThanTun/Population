@@ -222,7 +222,7 @@ for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
     for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
       tmp_lci[k] <- sims[[k]][j,i]
     }
-    lci_sims[j,i] <- quantile(tmp_lci, probs=lci)
+    lci_sims[j,i] <- quantile(tmp_lci, probs=lci, na.rm=TRUE)
   }
 }
 
@@ -234,18 +234,18 @@ for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
     for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
       tmp_hci[k] <- sims[[k]][j,i]
     }
-    hci_sims[j,i] <- quantile(tmp_hci, probs = hci)
+    hci_sims[j,i] <- quantile(tmp_hci, probs = hci, na.rm=TRUE)
   }
 }
 
 par(mar=c(5,4,4,4))
-plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
+plot(avg_sims[,1],avg_sims[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
 axis(2, ylim=c(0,17),col="blue") 
 mtext("Susceptible humans",side=2,line=2.5) 
 
 box()
 par(new=TRUE)
-plot(summ_tab[,1],summ_tab[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
+plot(avg_sims[,1],avg_sims[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
 axis(4, ylim=c(0,17),col="red") 
 mtext("Infected humans",side=4, line=2.5)
 

@@ -20,6 +20,10 @@ M <- 800 #initial mosquito population
 Z <- 200 #initial infected mosquitos
 timesteps_days <- 28
 timesteps <- timesteps_days*2 #365*2 
+no_sims <- 10 #no. of simulations
+
+lci <- .05 #lowest confidence interval
+hci <- .95  #highest confidence interval
 
 #this also needs to be changed during the subsequent timesteps
 m <- M/H
@@ -85,7 +89,7 @@ df <- cbind(sim_age,gender,infected_h, tts, random_no, current)
 #6. current #a switch to detect if an individual is infected in current timestep or not
 
 
-#initializing
+###initializing####
 for(i in 1:nrow(df)){
   if(df[i,3] && df[i,6]){ #if infected #at current timestep 
     
@@ -168,7 +172,7 @@ simulate_summ <- function(){
 summ_tab <- simulate_summ()
 
 
-####plotting####
+####plotting 1 simulation####
 par(mar=c(5,4,4,4))
 plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
 axis(2, ylim=c(0,17),col="blue") 
@@ -186,12 +190,70 @@ mtext("Time (0.5 days)",side=1,col="black",line=2.5)
 legend("top",legend=c("Susceptibles","Infected"),
        text.col=c("blue","red"),pch= "__", col=c("blue","red"))
 
-
-#infected var
-#1 <= infected
-#0 <- susceptible
-
-#synthesizing patches of mosquitos
-
+###writing csv 1 simulation####
 write.csv(summ_tab,file=paste('summary_ibm_',Sys.Date(),'.csv',sep=''))
-          
+
+####plotting multiple simulation####
+
+
+#creating a list of simulations
+sims <- list()
+for(i in 1:no_sims){
+  sims[[i]] <- simulate_summ()
+}
+
+#averaging across the list
+tmp_avg <- rep(NA,no_sims)
+avg_sims <- matrix(NA,nrow(sims[[1]]),ncol(sims[[1]])) #initializing a blank dataset of summary table
+for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
+  for(j in 1:nrow(sims[[1]])){ #inner loop for the rows
+    for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
+      tmp_avg[k] <- sims[[k]][j,i]
+    }
+    avg_sims[j,i] <- mean(tmp_avg)
+  }
+}
+
+#lower CI (LCI)
+tmp_lci <- rep(NA,no_sims)
+lci_sims <- matrix(NA,nrow(sims[[1]]),ncol(sims[[1]])) #initializing a blank dataset of summary table
+for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
+  for(j in 1:nrow(sims[[1]])){ #inner loop for the rows
+    for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
+      tmp_lci[k] <- sims[[k]][j,i]
+    }
+    lci_sims[j,i] <- quantile(tmp_lci, probs=lci)
+  }
+}
+
+#high CI (HCI)
+tmp_hci <- rep(NA,no_sims)
+hci_sims <- matrix(NA,nrow(sims[[1]]),ncol(sims[[1]])) #initializing a blank dataset of summary table
+for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
+  for(j in 1:nrow(sims[[1]])){ #inner loop for the rows
+    for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
+      tmp_hci[k] <- sims[[k]][j,i]
+    }
+    hci_sims[j,i] <- quantile(tmp_hci, probs = hci)
+  }
+}
+
+par(mar=c(5,4,4,4))
+plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
+axis(2, ylim=c(0,17),col="blue") 
+mtext("Susceptible humans",side=2,line=2.5) 
+
+box()
+par(new=TRUE)
+plot(summ_tab[,1],summ_tab[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
+axis(4, ylim=c(0,17),col="red") 
+mtext("Infected humans",side=4, line=2.5)
+
+axis(1,pretty(range(summ_tab[,1]),10))
+mtext("Time (0.5 days)",side=1,col="black",line=2.5)
+
+legend("top",legend=c("Susceptibles","Infected"),
+       text.col=c("blue","red"),pch= "__", col=c("blue","red"))
+
+###writing csv multiple simulations####
+write.csv(summ_tab,file=paste('summary_ibm_',Sys.Date(),'.csv',sep=''))

@@ -174,7 +174,7 @@ summ_tab <- simulate_summ()
 
 ####plotting 1 simulation####
 par(mar=c(5,4,4,4))
-plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
+plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda",lam_h))
 axis(2, ylim=c(0,17),col="blue") 
 mtext("Susceptible humans",side=2,line=2.5) 
 
@@ -239,21 +239,23 @@ for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
 }
 
 par(mar=c(5,4,4,4))
-plot(avg_sims[,1],avg_sims[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
+plot(avg_sims[,1],avg_sims[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda",lam_h,"and CI",lci,'-',hci))
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,2], rev(lci_sims[,2])),col=rgb(0,0,100,50,maxColorValue=255), border=NA)
 axis(2, ylim=c(0,17),col="blue") 
 mtext("Susceptible humans",side=2,line=2.5) 
 
 box()
 par(new=TRUE)
 plot(avg_sims[,1],avg_sims[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,3], rev(lci_sims[,3])),col=rgb(100,0,0,50,maxColorValue = 255), border=NA)
 axis(4, ylim=c(0,17),col="red") 
 mtext("Infected humans",side=4, line=2.5)
 
-axis(1,pretty(range(summ_tab[,1]),10))
+axis(1,pretty(range(avg_sims[,1]),10))
 mtext("Time (0.5 days)",side=1,col="black",line=2.5)
 
 legend("top",legend=c("Susceptibles","Infected"),
        text.col=c("blue","red"),pch= "__", col=c("blue","red"))
 
-###writing csv multiple simulations####
-write.csv(summ_tab,file=paste('summary_ibm_',Sys.Date(),'.csv',sep=''))
+###writing csv_ average of multiple simulations####
+write.csv(avg_sims,file=paste('avg_summary_ibm_',Sys.Date(),'.csv',sep=''))

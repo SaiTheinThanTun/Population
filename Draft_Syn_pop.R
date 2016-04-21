@@ -104,7 +104,7 @@ write.csv(df, file='0.csv')
 
 #subsequent timesteps
 summ_tab <- matrix(NA, nrow=timesteps, ncol=7) # summary table for plotting
-colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','M','Z','lam')
+colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam')
 
 #there's an error which one to take as time 0 (or 0.5)
 summ_tab[,1] <- seq(0.5,timesteps_days,by=(1/2))
@@ -150,7 +150,7 @@ for(j in 1:timesteps){
   summ_tab[j,2] <- H-X
   summ_tab[j,3] <- X
   summ_tab[j,4] <-lam_h
-  summ_tab[j,5] <- M 
+  summ_tab[j,5] <- M-Z 
   summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
   summ_tab[j,7] <- lam
   

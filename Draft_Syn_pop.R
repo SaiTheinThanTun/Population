@@ -98,69 +98,77 @@ for(i in 1:nrow(df)){
   df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
   df[i,6] <- 0 # resetting 'infected at current timestep'
 }
-write.csv(df, file='0.csv')
+
+#######write an initialized file#####
+#write.csv(df, file='0.csv')
 
 
-
-#subsequent timesteps
-summ_tab <- matrix(NA, nrow=timesteps, ncol=7) # summary table for plotting
-colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam')
-
-#there's an error which one to take as time 0 (or 0.5)
-summ_tab[,1] <- seq(0.5,timesteps_days,by=(1/2))
+#######Simulate Summary table function#####
+simulate_summ <- function(){
+  #subsequent timesteps
+  summ_tab <- matrix(NA, nrow=timesteps, ncol=7) # summary table for plotting
+  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam')
   
-for(j in 1:timesteps){
+  #there's an error which one to take as time 0 (or 0.5)
+  summ_tab[,1] <- seq(0.5,timesteps_days,by=(1/2))
   
-  for(i in 1:nrow(df)){
-    if(df[i,5]<=lam_h){ #if uniform random no. drawn for individual is <= prob of infected
-      df[i,3] <- df[i,6] <- 1 #denoting this person is infected on this timestep
-    }
+  for(j in 1:timesteps){
     
-    if(df[i,3]==1 && df[i,6]==1){ #if infected #at current timestep 
+    for(i in 1:nrow(df)){
+      if(df[i,5]<=lam_h){ #if uniform random no. drawn for individual is <= prob of infected
+        df[i,3] <- df[i,6] <- 1 #denoting this person is infected on this timestep
+      }
       
-      df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
+      if(df[i,3]==1 && df[i,6]==1){ #if infected #at current timestep 
+        
+        df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
+        
+      }
       
+      df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
+      
+      if(df[i,4]<=0 && df[i,3]==1){ #infected at current step, but durinf is over
+        df[i,3] <- 0
+      }
+      
+      #resetting for the next round
+      df[i,5] <- runif(1) #drawing random no. for each individual
+      df[i,6] <- 0 # resetting 'infected at current timestep'
     }
+    #at the end of big for loop
+    #calculate lam_h
+    X <- sum(df[,3]) #no. of infected humans
+    x <- X/H #ratio of infectious humans
+    #rate of change of Z from ODE
+    lam <- a*c*x
+    Z <- Z+lam*(M-Z)
     
-    df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
+    #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     
-    if(df[i,4]<=0 && df[i,3]==1){ #infected at current step, but durinf is over
-      df[i,3] <- 0
-    }
+    z <- Z/M
+    lam_h <- m*a*b*z
     
-    #resetting for the next round
-    df[i,5] <- runif(1) #drawing random no. for each individual
-    df[i,6] <- 0 # resetting 'infected at current timestep'
+    #writing a summary table
+    #summ_tab[j,1] <- j
+    summ_tab[j,2] <- H-X
+    summ_tab[j,3] <- X
+    summ_tab[j,4] <-lam_h
+    summ_tab[j,5] <- M-Z 
+    summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
+    summ_tab[j,7] <- lam
+    
+    ######outputing csv of the simulations#######
+    #if(j<10 | j>(max(timesteps)-10)){
+    #  write.csv(df, file=paste(j,".csv",sep=""))
+    #}
   }
-  #at the end of big for loop
-  #calculate lam_h
-  X <- sum(df[,3]) #no. of infected humans
-  x <- X/H #ratio of infectious humans
-  #rate of change of Z from ODE
-  lam <- a*c*x
-  Z <- Z+lam*(M-Z)
-  
-  #m <- M/H ###no. of mosquitos doesn't change FOR NOW
-  
-  z <- Z/M
-  lam_h <- m*a*b*z
-  
-  #writing a summary table
-  #summ_tab[j,1] <- j
-  summ_tab[j,2] <- H-X
-  summ_tab[j,3] <- X
-  summ_tab[j,4] <-lam_h
-  summ_tab[j,5] <- M-Z 
-  summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
-  summ_tab[j,7] <- lam
-  
-  if(j<10 | j>(max(timesteps)-10)){
-    write.csv(df, file=paste(j,".csv",sep=""))
-  }
+  summ_tab
 }
 
+summ_tab <- simulate_summ()
 
-#plotting
+
+####plotting####
 par(mar=c(5,4,4,4))
 plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda ",lam_h()))
 axis(2, ylim=c(0,17),col="blue") 

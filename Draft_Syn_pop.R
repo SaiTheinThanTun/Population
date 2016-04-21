@@ -94,8 +94,8 @@ write.csv(df, file='0.csv')
 
 
 #subsequent timesteps
-summ_tab <- matrix(NA, nrow=timesteps, ncol=3) # summary table for plotting
-colnames(summ_tab) <- c('timesteps','susceptables','infected')
+summ_tab <- matrix(NA, nrow=timesteps, ncol=6) # summary table for plotting
+colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','lam','Z')
 
 #there's an error which one to take as time 0 (or 0.5)
 summ_tab[,1] <- seq(0.5,timesteps_days,by=(1/2))
@@ -140,6 +140,9 @@ for(j in 1:timesteps){
   #summ_tab[j,1] <- j
   summ_tab[j,2] <- H-X
   summ_tab[j,3] <- X
+  summ_tab[j,4] <-lam_h
+  summ_tab[j,5] <- lam 
+  summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
   
   if(j<10 | j>(max(timesteps)-10)){
     write.csv(df, file=paste(j,".csv",sep=""))
@@ -172,3 +175,5 @@ legend("top",legend=c("Susceptibles","Infected"),
 
 #synthesizing patches of mosquitos
 
+write.csv(summ_tab,file=paste('summary_ibm_',Sys.Date(),'.csv',sep=''))
+          

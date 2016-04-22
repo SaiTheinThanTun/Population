@@ -1,4 +1,6 @@
 #to rearrange the codes into a structure
+
+#if adding more variablese, search for this hashtag #variable addition
 setwd("C:/wd")
 
 #reading in files
@@ -78,7 +80,7 @@ tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
 random_no <- runif(H) # random uniform no. to decide the prob. of being infected if susceptable
 current <- rep(1, H) #infected in current timestep
 
-df <- cbind(sim_age,gender,infected_h, tts, random_no, current)
+df <- cbind(sim_age,gender,infected_h, tts, random_no, current) #variable addition
 
 #codebook for df
 #1. sim_age
@@ -103,6 +105,21 @@ for(i in 1:nrow(df)){
   df[i,6] <- 0 # resetting 'infected at current timestep'
 }
 
+#first row of the summary table
+#time 0
+X <- sum(df[,3]) #no. of infected humans
+x <- X/H #ratio of infectious humans
+#rate of change of Z from ODE
+lam <- a*c*x
+###need to check this####
+#Z <- Z+lam*(M-Z) 
+
+#m <- M/H ###no. of mosquitos doesn't change FOR NOW
+z <- Z/M
+lam_h <- m*a*b*z
+
+time0 <- c(0, H-X, X, lam_h, M-Z, Z, lam) #variable addition
+
 #######write an initialized file#####
 #write.csv(df, file='0.csv')
 
@@ -110,13 +127,16 @@ for(i in 1:nrow(df)){
 #######Simulate Summary table function#####
 simulate_summ <- function(){
   #subsequent timesteps
-  summ_tab <- matrix(NA, nrow=timesteps, ncol=7) # summary table for plotting
+  
+  #variable addition
+  summ_tab <- matrix(NA, nrow=timesteps+1, ncol=7) # summary table for plotting, +1 because it starts from 0
   colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam')
+  #variable addition
   
   #there's an error which one to take as time 0 (or 0.5)
-  summ_tab[,1] <- seq(0.5,timesteps_days,by=(1/2))
+  summ_tab[,1] <- seq(0,timesteps_days,by=(1/2))
   
-  for(j in 1:timesteps){
+  for(j in 2:timesteps+1){
     
     for(i in 1:nrow(df)){
       if(df[i,5]<=lam_h){ #if uniform random no. drawn for individual is <= prob of infected

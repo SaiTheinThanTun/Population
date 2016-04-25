@@ -80,7 +80,7 @@ tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
 random_no <- runif(H) # random uniform no. to decide the prob. of being infected if susceptable
 current <- rep(1, H) #infected in current timestep
 
-df <- cbind(sim_age,gender,infected_h, tts, random_no, current) #variable addition
+df <- cbind(sim_age,gender,infected_h, tts, random_no, current) #variable addition for populated dataframe
 
 #codebook for df
 #1. sim_age
@@ -118,7 +118,7 @@ lam <- a*c*x
 z <- Z/M
 lam_h <- m*a*b*z
 
-time0 <- c(0, H-X, X, lam_h, M-Z, Z, lam) #variable addition
+time0 <- c(0, H-X, X, lam_h, M-Z, Z, lam) #variable addition for simulation table
 
 #######write an initialized file#####
 #write.csv(df, file='0.csv')
@@ -128,15 +128,16 @@ time0 <- c(0, H-X, X, lam_h, M-Z, Z, lam) #variable addition
 simulate_summ <- function(){
   #subsequent timesteps
   
-  #variable addition
+  #variable addition for simulation table
   summ_tab <- matrix(NA, nrow=timesteps+1, ncol=7) # summary table for plotting, +1 because it starts from 0
   colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam')
-  #variable addition
+  #variable addition for simulation table
+  summ_tab[1,] <- time0 #the first line of the table. the states at time0
   
   #there's an error which one to take as time 0 (or 0.5)
   summ_tab[,1] <- seq(0,timesteps_days,by=(1/2))
   
-  for(j in 2:timesteps+1){
+  for(j in 1:timesteps+1){ #this means 2:(timesteps+1)
     
     for(i in 1:nrow(df)){
       if(df[i,5]<=lam_h){ #if uniform random no. drawn for individual is <= prob of infected

@@ -160,15 +160,15 @@ simulate_summ <- function(){#function for subsequent timesteps
     X <- sum(df[,3]) #no. of infected humans
     x <- X/H #ratio of infectious humans
     #rate of change of Z from ODE
-    lam <- a*c*x
+    lam <- a*c*x #1-(1-(a*c))^x #a*c*x
     S_prev <- (M-Z)
-    S <- S_prev+M*mui-S_prev*muo
+    S <- S_prev+M*mui-muo*S_prev-lam*S_prev
     Z <- Z+lam*S_prev-muo*Z
     
     M <- S+Z #recalculating mosquito population
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     z <- Z/M
-    lam_h <- m*a*b*z
+    lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z
     
     #writing a summary table
     #summ_tab[j,1] <- j

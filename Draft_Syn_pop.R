@@ -1,16 +1,27 @@
-#to rearrange the codes into a structure
+#before you run, create a directory named 'wd' under 'C:/'
+#copy 2 csv files: 0to97_age_prob.csv and 0to97_male_prob.csv into the 'C:/wd'
 
-#if adding more variablese, search for this hashtag #variable addition
+#this R script file does the following:
+#1. synthesize a population based upon Myanmar census data 2014, see ####codebook for df#### section for variables
+#2. input parameters are required to synthesize and simulate the population, see ####parameters#### section
+#3. create a function that do a single simulation and summarize the result on each timestep
+#4. run multiple simulations, change #no. of simulations in ####parameters####
+####and create their averages with confidence interval
+#5. write csv files and plot the results
+
+#if more variables are to be added, search for this hashtag #variable addition
+
+####libraries####
+library(ggplot2)
+
+#reading in files for census data
 setwd("C:/wd")
+age_prob_0to97 <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)
+male_prob_0to97 <- read.csv("C:/wd//0to97_male_prob.csv", header=FALSE)
+#age, 98+ were unaccounted for
+age <- 0:97
 
-#reading in files
-age_prob_0to97 <- read.csv("D:/Dropbox/IBM project_Sai/Population/0to97_age_prob.csv", header=FALSE)
-#age_prob_0to97 <- read.csv("C:/Users/lisa/Dropbox/IBM project_Sai/Population/0to97_age_prob.csv", header=FALSE)
-
-male_prob_0to97 <- read.csv("D:/Dropbox/IBM project_Sai/Population/0to97_male_prob.csv", header=FALSE)
-#male_prob_0to97 <- read.csv("C:/Users/lisa/Dropbox/IBM project_Sai/Population/0to97_male_prob.csv", header=FALSE)
-
-#inputs
+####parameters####
 durinf <- 7 #duration of infection
 a <- .1 #human blood feeding rate
 b <- .3 #probability of disease transmission per bite for human
@@ -32,24 +43,13 @@ m <- M/H
 z <- Z/M
 x <- X/H #ratio of infectious humans
 
-lam_h <- m*a*b*z
-#lam_h <- 0.075
-
+lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans
 lam <- a*c*x #lambda for mosquitos
 
 
-#synthesizing a population
-#pop_size <- 5000
-
-#age, 98+ were unaccounted for
-age <- 0:97
-
-
-
+####synthesizing age and gender####
 sim_age <- sample(age, H, replace=TRUE,prob=age_prob_0to97[,1])
-hist(sim_age) 
-
-#gender
+#hist(sim_age) 
 gender <- rep(NA,length(sim_age))
 
 for(i in 1:length(sim_age)){
@@ -57,19 +57,14 @@ for(i in 1:length(sim_age)){
   gender[i] <- sample(2,1,prob=c(p,1-p))
 }
 
-#testing the proportions
-library(ggplot2)
-tmp <- cbind(sim_age,gender)
-tmp <- as.data.frame(tmp)
-colnames(tmp) <- c('s_age','s_gender')
-tmp$s_gender <- as.factor(tmp$s_gender)
-qplot(s_age, data=tmp,fill=s_gender)
+####testing the proportions####
+#tmp <- cbind(sim_age,gender)
+#tmp <- as.data.frame(tmp)
+#colnames(tmp) <- c('s_age','s_gender')
+#tmp$s_gender <- as.factor(tmp$s_gender)
+#qplot(s_age, data=tmp,fill=s_gender)
 
-#disease state
-#malaria <- rep(NA,pop_size)
-#for(i in 1:pop_size){
-#  malaria[i] <- sample(c("S","I","R"),1, prob=c(.7,.1,.2))
-#}
+####synthesizing infected population####
 infected_h <- rep(NA,H)
 for(i in 1:H){
   infected_h[i] <- sample(c(0,1),1, prob=c(.8,.2))
@@ -82,7 +77,7 @@ current <- rep(1, H) #infected in current timestep
 
 df <- cbind(sim_age,gender,infected_h, tts, random_no, current) #variable addition for populated dataframe
 
-#codebook for df
+####codebook for df####
 #1. sim_age
 #2. gender
 #3. infected_h
@@ -125,12 +120,10 @@ time0 <- c(0, H-X, X, lam_h, M-Z, Z, lam) #variable addition for simulation tabl
 
 
 #######Simulate Summary table function#####
-simulate_summ <- function(){
-  #subsequent timesteps
+simulate_summ <- function(){#function for subsequent timesteps
   
-  #variable addition for simulation table
-  summ_tab <- matrix(NA, nrow=timesteps+1, ncol=7) # summary table for plotting, +1 because it starts from 0
-  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam')
+  summ_tab <- matrix(NA, nrow=timesteps+1, ncol=7) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
+  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam') #column names for the summary table
   #variable addition for simulation table
   summ_tab[1,] <- time0 #the first line of the table. the states at time0
   
@@ -146,14 +139,14 @@ simulate_summ <- function(){
       
       if(df[i,3]==1 && df[i,6]==1){ #if infected #at current timestep 
         
-        df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
+        df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to become susceptable again
         
       }
       
       df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
       
-      if(df[i,4]<=0 && df[i,3]==1){ #infected at current step, but durinf is over
-        df[i,3] <- 0
+      if(df[i,4]<=0 && df[i,3]==1){ #currently infected, but durinf is over
+        df[i,3] <- 0 #then he becomes suscepitable again
       }
       
       #resetting for the next round
@@ -161,15 +154,13 @@ simulate_summ <- function(){
       df[i,6] <- 0 # resetting 'infected at current timestep'
     }
     #at the end of big for loop
-    #calculate lam_h
+    #calculate summary variables and lam_h for the next timestep
     X <- sum(df[,3]) #no. of infected humans
     x <- X/H #ratio of infectious humans
     #rate of change of Z from ODE
     lam <- a*c*x
     Z <- Z+lam*(M-Z)
-    
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
-    
     z <- Z/M
     lam_h <- m*a*b*z
     
@@ -182,7 +173,7 @@ simulate_summ <- function(){
     summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
     summ_tab[j,7] <- lam
     
-    ######outputing csv of the simulations#######
+    ######outputing csv of the simulation on each timestep#######
     #if(j<10 | j>(max(timesteps)-10)){
     #  write.csv(df, file=paste(j,".csv",sep=""))
     #}
@@ -190,7 +181,7 @@ simulate_summ <- function(){
   summ_tab
 }
 
-summ_tab <- simulate_summ()
+summ_tab <- simulate_summ() #this is to be used for plotting a single simulation
 
 
 ####plotting 1 simulation####

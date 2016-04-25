@@ -3,12 +3,12 @@ setwd("C:/wd")
 c.names <- c('no','time','Sh','X','lam_h','S','Z','lam') #setting column names
 
 ode <- read.csv('summary_ode_.csv')
-#ode <- read.csv('avg_summary_ibm_original2.csv')
+#ode <- read.csv('avg_summary_ibm_2016-04-25.csv')
 #remove the last Y column
 ode <- ode[,-9]
 colnames(ode) <- c.names
 
-ibm <- read.csv('avg_summary_ibm_2016-04-25.csv.csv')
+ibm <- read.csv('avg_summary_ibm_2016-04-25.csv')
 colnames(ibm) <- c.names
 
 

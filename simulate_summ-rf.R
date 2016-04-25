@@ -42,7 +42,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     Z <- Z+lam*(M-Z)
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     z <- Z/M
-    lam_h <- 1-(1-(a*b))^(m*z) #m*a*b*z
+    lam_h <- 1-(1-(a*b))^(m*z) #m*a*b*z #1-(1-(a*b*m))^z
     
     #writing a summary table
     #summ_tab[j,1] <- j

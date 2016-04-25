@@ -21,3 +21,5 @@ hist(dif[,3])
 plot(dif[,3],dif[,3])
 plot(1:nrow(dif),dif[,3])
 
+#difference between lambda_h
+plot(1:nrow(dif),dif[,5])

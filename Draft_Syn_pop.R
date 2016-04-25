@@ -161,7 +161,11 @@ simulate_summ <- function(){#function for subsequent timesteps
     x <- X/H #ratio of infectious humans
     #rate of change of Z from ODE
     lam <- a*c*x
-    Z <- Z+lam*(M-Z)
+    S_prev <- (M-Z)
+    S <- S_prev+M*mui-S_prev*muo
+    Z <- Z+lam*S_prev-muo*Z
+    
+    M <- S+Z #recalculating mosquito population
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     z <- Z/M
     lam_h <- m*a*b*z
@@ -171,7 +175,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     summ_tab[j,2] <- H-X
     summ_tab[j,3] <- X
     summ_tab[j,4] <-lam_h
-    summ_tab[j,5] <- M-Z 
+    summ_tab[j,5] <- S #############################
     summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
     summ_tab[j,7] <- lam
     

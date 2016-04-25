@@ -26,6 +26,8 @@ durinf <- 7 #duration of infection
 a <- .1 #human blood feeding rate
 b <- .3 #probability of disease transmission per bite for human
 c <- .7 #probability a mosquito becomes infected after biting an infected human
+muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
+moi <- .05
 
 H <- 80 #human population
 X <- 30 #infected humans

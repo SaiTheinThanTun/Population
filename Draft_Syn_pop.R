@@ -145,7 +145,7 @@ simulate_summ <- function(){#function for subsequent timesteps
   for(j in 1:timesteps+1){ #this means 2:(timesteps+1)
     
     for(i in 1:nrow(df)){
-      if(df[i,5]<=lam_h){ #if uniform random no. drawn for individual is <= prob of infected
+      if(df[i,3]==0 & df[i,5]<=lam_h){ #if uniform random no. drawn for 'uninfected' individual is <= prob of getting infected
         df[i,3] <- df[i,6] <- 1 #denoting this person is infected on this timestep
       }
       
@@ -158,7 +158,7 @@ simulate_summ <- function(){#function for subsequent timesteps
       df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
       
       if(df[i,4]<=0 && df[i,3]==1){ #currently infected, but durinf is over
-        df[i,3] <- 0 #then he becomes suscepitable again
+        df[i,3] <- 0 #then he becomes suscepitable again on the next timestep
       }
       
       #resetting for the next round
@@ -189,10 +189,10 @@ simulate_summ <- function(){#function for subsequent timesteps
     summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
     summ_tab[j,7] <- lam
     
-    ######outputing csv of the simulation on each timestep#######
-    #if(j<10 | j>(max(timesteps)-10)){
-    #  write.csv(df, file=paste(j,".csv",sep=""))
-    #}
+    ######outputting csv of the simulation on each timestep#######
+    if(j<20 | j>(max(timesteps)-10)){
+      write.csv(df, file=paste(j-1,".csv",sep=""))
+    }
   }
   summ_tab
 }

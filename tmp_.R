@@ -1,3 +1,5 @@
+source('D:/Dropbox/IBM project_Sai/Population/simulate_summ-rf.R')
+
 #before you run, create a directory named 'wd' under 'C:/'
 #copy 2 csv files: 0to97_age_prob.csv and 0to97_male_prob.csv into the 'C:/wd'
 
@@ -17,15 +19,17 @@ library(ggplot2)
 #reading in files for census data
 setwd("C:/wd")
 age_prob_0to97 <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)
-male_prob_0to97 <- read.csv("C:/wd//0to97_male_prob.csv", header=FALSE)
+male_prob_0to97 <- read.csv("C:/wd/0to97_male_prob.csv", header=FALSE)
 #age, 98+ were unaccounted for
 age <- 0:97
 
 ####parameters####
-durinf <- 7 #duration of infection
+durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
 a <- .1 #human blood feeding rate
 b <- .3 #probability of disease transmission per bite for human
 c <- .7 #probability a mosquito becomes infected after biting an infected human
+muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
+mui <- .05
 
 H <- 80 #human population
 X <- 30 #infected humans
@@ -66,8 +70,10 @@ for(i in 1:length(sim_age)){
 
 ####synthesizing infected population####
 infected_h <- rep(NA,H)
+S_prob <- (H-X)/H
+I_prob <- X/H
 for(i in 1:H){
-  infected_h[i] <- sample(c(0,1),1, prob=c(.8,.2))
+  infected_h[i] <- sample(c(0,1),1, prob=c(S_prob,I_prob))
 }
 
 tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
@@ -115,7 +121,7 @@ lam_h <- m*a*b*z
 
 time0 <- c(0, H-X, X, lam_h, M-Z, Z, lam) #variable addition for simulation table
 
-source('D:/Dropbox/IBM project_Sai/Population/simulate_summ-rf.R')
+
 
 ####plotting multiple simulation####
 
@@ -185,4 +191,3 @@ legend("top",legend=c("Susceptibles","Infected"),
 
 ###writing csv_ average of multiple simulations####
 write.csv(avg_sims,file=paste('avg_summary_ibm_',Sys.Date(),'.csv',sep=''))
-

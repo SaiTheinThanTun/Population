@@ -4,12 +4,13 @@
 #this R script file does the following:
 #1. synthesize a population based upon Myanmar census data 2014, see ####codebook for df#### section for variables
 #2. input parameters are required to synthesize and simulate the population, see ####parameters#### section
-#3. create a function that do a single simulation and summarize the result on each timestep
-#4. run multiple simulations, change #no. of simulations in ####parameters####
+#3. create a function that runs a single simulation and summarize the result on each timestep
+#4. run multiple simulations. you can change #no. of simulations in ####parameters####
 ####and create their averages with confidence interval
 #5. write csv files and plot the results
 
 #if more variables are to be added, search for this hashtag #variable addition
+#if output is needed for each timestep, search for and comment out this hashtag #outputting csv
 
 ####libraries####
 library(ggplot2)
@@ -17,17 +18,17 @@ library(ggplot2)
 #reading in files for census data
 setwd("C:/wd")
 age_prob_0to97 <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)
-male_prob_0to97 <- read.csv("C:/wd//0to97_male_prob.csv", header=FALSE)
+male_prob_0to97 <- read.csv("C:/wd/0to97_male_prob.csv", header=FALSE)
 #age, 98+ were unaccounted for
 age <- 0:97
 
 ####parameters####
-durinf <- 7 #duration of infection
+durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
 a <- .1 #human blood feeding rate
 b <- .3 #probability of disease transmission per bite for human
 c <- .7 #probability a mosquito becomes infected after biting an infected human
 muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
-moi <- .05
+mui <- .05
 
 H <- 80 #human population
 X <- 30 #infected humans
@@ -68,8 +69,10 @@ for(i in 1:length(sim_age)){
 
 ####synthesizing infected population####
 infected_h <- rep(NA,H)
+S_prob <- (H-X)/H
+I_prob <- X/H
 for(i in 1:H){
-  infected_h[i] <- sample(c(0,1),1, prob=c(.8,.2))
+  infected_h[i] <- sample(c(0,1),1, prob=c(S_prob,I_prob))
 }
 
 tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
@@ -107,18 +110,25 @@ for(i in 1:nrow(df)){
 X <- sum(df[,3]) #no. of infected humans
 x <- X/H #ratio of infectious humans
 #rate of change of Z from ODE
-lam <- a*c*x
+lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
+S_prev <- (M-Z)
+Z_prev <- Z #only in this first step, on later steps in the function, it was not recorded
+M_prev <- M
+S <- S_prev+M_prev*mui-muo*S_prev-lam*S_prev
+Z <- Z_prev+lam*S_prev-muo*Z_prev
+
+M <- S+Z #recalculating mosquito population
 ###need to check this####
-#Z <- Z+lam*(M-Z) 
 
 #m <- M/H ###no. of mosquitos doesn't change FOR NOW
 z <- Z/M
 lam_h <- m*a*b*z
 
-time0 <- c(0, H-X, X, lam_h, M-Z, Z, lam) #variable addition for simulation table
+time0 <- c(0, H-X, X, lam_h, S_prev, Z_prev, lam) #variable addition for simulation table
+##above, lam_h and lam values are for the next time step
 
-#######write an initialized file#####
-#write.csv(df, file='0.csv')
+#######outputting csv: write an initialized file#####
+write.csv(df, file='0.csv')
 
 
 #######Simulate Summary table function#####
@@ -160,7 +170,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     X <- sum(df[,3]) #no. of infected humans
     x <- X/H #ratio of infectious humans
     #rate of change of Z from ODE
-    lam <- a*c*x #1-(1-(a*c))^x #a*c*x
+    lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
     S_prev <- (M-Z)
     S <- S_prev+M*mui-muo*S_prev-lam*S_prev
     Z <- Z+lam*S_prev-muo*Z
@@ -168,7 +178,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     M <- S+Z #recalculating mosquito population
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     z <- Z/M
-    lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z
+    lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z  ###Reed-Frost
     
     #writing a summary table
     #summ_tab[j,1] <- j

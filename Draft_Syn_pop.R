@@ -282,7 +282,27 @@ axis(4, ylim=c(0,17),col="red")
 mtext("Infected humans",side=4, line=2.5)
 
 axis(1,pretty(range(avg_sims[,1]),10))
-mtext("Time (0.5 days)",side=1,col="black",line=2.5)
+mtext("Time (days)",side=1,col="black",line=2.5)
+
+legend("top",legend=c("Susceptibles","Infected"),
+       text.col=c("blue","red"),pch= "__", col=c("blue","red"))
+
+#mosquitos
+par(mar=c(5,4,4,4))
+plot(avg_sims[,1],avg_sims[,5], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("mosquito_pop")) # with lambda",lam_h,"and CI",lci,'-',hci))
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,5], rev(lci_sims[,5])),col=rgb(0,0,100,50,maxColorValue=255), border=NA)
+axis(2, ylim=c(0,17),col="blue") 
+mtext("Susceptible mosquitos",side=2,line=2.5) 
+
+box()
+par(new=TRUE)
+plot(avg_sims[,1],avg_sims[,6], type="l", col="red", axes=FALSE, xlab="", ylab="")
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,6], rev(lci_sims[,6])),col=rgb(100,0,0,50,maxColorValue = 255), border=NA)
+axis(4, ylim=c(0,17),col="red") 
+mtext("Infected mosquitos",side=4, line=2.5)
+
+axis(1,pretty(range(avg_sims[,1]),10))
+mtext("Time (days)",side=1,col="black",line=2.5)
 
 legend("top",legend=c("Susceptibles","Infected"),
        text.col=c("blue","red"),pch= "__", col=c("blue","red"))

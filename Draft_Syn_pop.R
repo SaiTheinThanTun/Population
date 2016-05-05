@@ -48,6 +48,7 @@ x <- X/H #ratio of infectious humans
 
 lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans
 lam <- a*c*x #lambda for mosquitos
+recover <- 1/(2*durinf) #probability of getting recovered
 
 
 ####synthesizing age and gender####
@@ -94,18 +95,18 @@ df <- cbind(sim_age,gender,infected_h, tts, random_no, random_no2, current) #var
 
 
 ###initializing####
-for(i in 1:nrow(df)){
-  if(df[i,3] && df[i,7]){ #if infected #at current timestep 
-    
-    
-    df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
-    
-    
-  }
-  
-  df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
-  df[i,7] <- 0 # resetting 'infected at current timestep'
-}
+# for(i in 1:nrow(df)){
+#   if(df[i,3] && df[i,7]){ #if infected #at current timestep 
+#     
+#     
+#     df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
+#     
+#     
+#   }
+#   
+#   df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
+#   df[i,7] <- 0 # resetting 'infected at current timestep'
+# }
 
 #first row of the summary table
 #time 0

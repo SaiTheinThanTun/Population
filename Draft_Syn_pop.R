@@ -78,9 +78,10 @@ for(i in 1:H){
 tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
 
 random_no <- runif(H) # random uniform no. to decide the prob. of being infected if susceptable
+random_no2 <- runif(H) # random uniform no. to decide the prob. of transition from infected to susceptible
 current <- rep(1, H) #infected in current timestep
 
-df <- cbind(sim_age,gender,infected_h, tts, random_no, current) #variable addition for populated dataframe
+df <- cbind(sim_age,gender,infected_h, tts, random_no, random_no2, current) #variable addition for populated dataframe
 
 ####codebook for df####
 #1. sim_age
@@ -88,12 +89,13 @@ df <- cbind(sim_age,gender,infected_h, tts, random_no, current) #variable additi
 #3. infected_h
 #4. tts #time to become susceptible again
 #5. random_n #random no. drawn from uniform distribution
-#6. current #a switch to detect if an individual is infected in current timestep or not
+#6. random_n2 # ...
+#7. current #a switch to detect if an individual is infected in current timestep or not
 
 
 ###initializing####
 for(i in 1:nrow(df)){
-  if(df[i,3] && df[i,6]){ #if infected #at current timestep 
+  if(df[i,3] && df[i,7]){ #if infected #at current timestep 
     
     
     df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
@@ -102,7 +104,7 @@ for(i in 1:nrow(df)){
   }
   
   df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
-  df[i,6] <- 0 # resetting 'infected at current timestep'
+  df[i,7] <- 0 # resetting 'infected at current timestep'
 }
 
 #first row of the summary table
@@ -146,10 +148,10 @@ simulate_summ <- function(){#function for subsequent timesteps
     
     for(i in 1:nrow(df)){
       if(df[i,3]==0 & df[i,5]<=lam_h){ #if uniform random no. drawn for 'uninfected' individual is <= prob of getting infected
-        df[i,3] <- df[i,6] <- 1 #denoting this person is infected on this timestep
+        df[i,3] <- df[i,7] <- 1 #denoting this person is infected on this timestep
       }
       
-      if(df[i,3]==1 && df[i,6]==1){ #if infected #at current timestep 
+      if(df[i,3]==1 && df[i,7]==1){ #if infected #at current timestep 
         
         df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to become susceptable again
         
@@ -163,7 +165,7 @@ simulate_summ <- function(){#function for subsequent timesteps
       
       #resetting for the next round
       df[i,5] <- runif(1) #drawing random no. for each individual
-      df[i,6] <- 0 # resetting 'infected at current timestep'
+      df[i,7] <- 0 # resetting 'infected at current timestep'
     }
     #at the end of big for loop
     #calculate summary variables and lam_h for the next timestep

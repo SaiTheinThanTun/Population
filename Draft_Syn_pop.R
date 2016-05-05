@@ -1,5 +1,6 @@
 #before you run, create a directory named 'wd' under 'C:/'
 #copy 2 csv files: 0to97_age_prob.csv and 0to97_male_prob.csv into the 'C:/wd'
+#copy a generic function file called 'avg_stk_tbl.R' into 'C:/wd/'
 
 #this R script file does the following:
 #1. synthesize a population based upon Myanmar census data 2014, see ####codebook for df#### section for variables
@@ -17,6 +18,7 @@ library(ggplot2)
 
 #reading in files for census data
 setwd("C:/wd")
+source('avg_stk_tbl.R')
 age_prob_0to97 <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)
 male_prob_0to97 <- read.csv("C:/wd/0to97_male_prob.csv", header=FALSE)
 #age, 98+ were unaccounted for
@@ -236,41 +238,13 @@ for(i in 1:no_sims){
 }
 
 #averaging across the list
-tmp_avg <- rep(NA,no_sims)
-avg_sims <- matrix(NA,nrow(sims[[1]]),ncol(sims[[1]])) #initializing a blank dataset of summary table
-for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
-  for(j in 1:nrow(sims[[1]])){ #inner loop for the rows
-    for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
-      tmp_avg[k] <- sims[[k]][j,i]
-    }
-    avg_sims[j,i] <- mean(tmp_avg)
-  }
-}
+avg_sims <- avg_stk_tbl(sims)
 
-#lower CI (LCI)
-tmp_lci <- rep(NA,no_sims)
-lci_sims <- matrix(NA,nrow(sims[[1]]),ncol(sims[[1]])) #initializing a blank dataset of summary table
-for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
-  for(j in 1:nrow(sims[[1]])){ #inner loop for the rows
-    for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
-      tmp_lci[k] <- sims[[k]][j,i]
-    }
-    lci_sims[j,i] <- quantile(tmp_lci, probs=lci, na.rm=TRUE)
-  }
-}
+# #lower CI (LCI)
+lci_sims <- avg_stk_tbl(sims,'ci',ci=lci)
 
-#high CI (HCI)
-tmp_hci <- rep(NA,no_sims)
-hci_sims <- matrix(NA,nrow(sims[[1]]),ncol(sims[[1]])) #initializing a blank dataset of summary table
-for(i in 1:ncol(sims[[1]])){ #outer loop for the columns
-  for(j in 1:nrow(sims[[1]])){ #inner loop for the rows
-    for(k in 1:no_sims){#innermost loop for no. of simulations(3rd dimension)
-      tmp_hci[k] <- sims[[k]][j,i]
-    }
-    hci_sims[j,i] <- quantile(tmp_hci, probs = hci, na.rm=TRUE)
-  }
-}
-
+# #high CI (HCI)
+hci_sims <- avg_stk_tbl(sims,'ci',ci=hci)
 colnames(avg_sims) <- colnames(hci_sims) <- colnames(lci_sims) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam') #column names for the summary table
 
 par(mar=c(5,4,4,4))

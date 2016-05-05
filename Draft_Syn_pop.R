@@ -81,8 +81,10 @@ tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
 random_no <- runif(H) # random uniform no. to decide the prob. of being infected if susceptable
 random_no2 <- runif(H) # random uniform no. to decide the prob. of transition from infected to susceptible
 current <- rep(1, H) #infected in current timestep
+patch.x <- sample(4,H, replace=TRUE)
+patch.y <- sample(4,H, replace=TRUE)
 
-df <- cbind(sim_age,gender,infected_h, tts, random_no, random_no2, current) #variable addition for populated dataframe
+df <- as.data.frame(cbind(sim_age,gender,infected_h, tts, random_no, random_no2, current, patch.x, patch.y)) #variable addition for populated dataframe
 
 ####codebook for df####
 #1. sim_age
@@ -95,22 +97,22 @@ df <- cbind(sim_age,gender,infected_h, tts, random_no, random_no2, current) #var
 
 
 ###initializing####
-# for(i in 1:nrow(df)){
-#   if(df[i,3] && df[i,7]){ #if infected #at current timestep 
-#     
-#     
-#     df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
-#     
-#     
-#   }
-#   
-#   df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
-#   df[i,7] <- 0 # resetting 'infected at current timestep'
-# }
+for(i in 1:nrow(df)){
+  if(df$infected_h[i] && df$current[i]){ #if infected #at current timestep 
+    
+    
+    df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
+    
+    
+  }
+  
+  df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
+  df$current[i] <- 0 # resetting 'infected at current timestep'
+}
 
 #first row of the summary table
 #time 0
-X <- sum(df[,3]) #no. of infected humans
+X <- sum(df$infected_h) #no. of infected humans
 x <- X/H #ratio of infectious humans
 #rate of change of Z from ODE
 lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost

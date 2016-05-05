@@ -156,13 +156,13 @@ simulate_summ <- function(){#function for subsequent timesteps
       
       if(df$infected_h[i]==1 && df$current[i]==1){ #if infected #at current timestep 
         
-        df[i,4] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to become susceptable again
+        df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to become susceptable again
         
       }
       
-      df[i,4] <- df[i,4]-.5 #tts-.5 per timestep
+      df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
       
-      if(df[i,4]<=0 && df$infected_h[i]==1){ #currently infected, but durinf is over
+      if(df$tts[i]<=0 && df$infected_h[i]==1){ #currently infected, but durinf is over
         df$infected_h[i] <- 0 #then he becomes suscepitable again on the next timestep
       }
       

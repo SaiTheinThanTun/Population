@@ -14,7 +14,7 @@
 #if output is needed for each timestep, search for and comment out this hashtag #outputting csv
 
 ####libraries####
-library(ggplot2)
+#library(ggplot2)
 
 #reading in files for census data
 setwd("C:/wd")
@@ -99,18 +99,18 @@ df <- as.data.frame(cbind(sim_age,gender,infected_h, tts, random_no, random_no2,
 
 
 ###initializing####
-for(i in 1:nrow(df)){
-  if(df$infected_h[i] && df$current[i]){ #if infected #at current timestep 
-    
-    
-    df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
-    
-    
-  }
-  
-  df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
-  df$current[i] <- 0 # resetting 'infected at current timestep'
-}
+# for(i in 1:nrow(df)){
+#   if(df$infected_h[i] && df$current[i]){ #if infected #at current timestep 
+#     
+#     
+#     df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
+#     
+#     
+#   }
+#   
+#   df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
+#   df$current[i] <- 0 # resetting 'infected at current timestep'
+# }
 
 #first row of the summary table
 #time 0
@@ -155,21 +155,26 @@ simulate_summ <- function(){#function for subsequent timesteps
       if(df$infected_h[i]==0 & df$random_no[i]<=lam_h){ #if uniform random no. drawn for 'uninfected' individual is <= prob of getting infected
         df$infected_h[i] <- df$current[i] <- 1 #denoting this person is infected on this timestep
       }
-      
-      if(df$infected_h[i]==1 && df$current[i]==1){ #if infected #at current timestep 
-        
-        df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to become susceptable again
-        
+      if(df$infected_h[i]==1 & df$current[i]==0 & df$random_no2[i]<=recover){
+        df$infected_h[i] <- 0
       }
+      #       if(df$infected_h[i]==1 && df$current[i]==1){ #if infected #at current timestep 
+      #         
+      #         df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to become susceptable again
+      #         
+      #       }
       
-      df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
+      # df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
       
-      if(df$tts[i]<=0 && df$infected_h[i]==1){ #currently infected, but durinf is over
-        df$infected_h[i] <- 0 #then he becomes suscepitable again on the next timestep
-      }
+      #       if(df$tts[i]<=0 && df$infected_h[i]==1){ #currently infected, but durinf is over
+      #         df$infected_h[i] <- 0 #then he becomes suscepitable again on the next timestep
+      #       }
       
       #resetting for the next round
       df$random_no[i] <- runif(1) #drawing random no. for each individual
+      df$random_no2[i] <- runif(1)
+      df$patch.x[i] <- sample(4,1)
+      df$patch.y[i] <- sample(4,1)
       df$current[i] <- 0 # resetting 'infected at current timestep'
     }
     #at the end of big for loop

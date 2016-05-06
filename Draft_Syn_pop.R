@@ -48,7 +48,7 @@ m <- M/H
 z <- Z/M
 x <- X/H #ratio of infectious humans
 
-lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans #this is not doing anything, since there's another assignment to lam_h
+#lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans #this is not doing anything, since there's another assignment to lam_h
 lam <- a*c*x #lambda for mosquitos
 recover <- 1/(2*durinf) #probability of getting recovered
 
@@ -118,9 +118,14 @@ M <- S+Z #recalculating mosquito population
 #m <- M/H ###no. of mosquitos doesn't change FOR NOW
 z <- Z/M
 #lam_h <- m*a*b*z
-lam_h <- (sin(.0089*0)*.02)+.1
+#lam_h <- (sin(.0089*0)*.02)+.1 #single value seasonal forcing
+lam_h_list <- list() #a new way of initializing lam_h 20160506
+for(i in 0:timesteps){
+  lam_h_list[[i+1]] <- matrix((sin(.0089*i)*.02)+.1,no.patch.x,no.patch.y) # as.data.frame(matrix((sin(.0089*i)*.02)+.1,no.patch.x,no.patch.y))
+}
+lam_h_0 <- lam_h_list[[1]][1,1]
 
-time0 <- c(0, H-X, X, lam_h, S_prev, Z_prev, lam) #variable addition for simulation table
+time0 <- c(0, H-X, X, lam_h_0, S_prev, Z_prev, lam) #variable addition for simulation table
 ##above, lam_h and lam values are for the next time step
 
 #######outputting csv: write an initialized file#####
@@ -141,6 +146,7 @@ simulate_summ <- function(){#function for subsequent timesteps
   for(j in 1:timesteps+1){ #this means 2:(timesteps+1)
     
     for(i in 1:nrow(df)){
+      lam_h <- lam_h_list[[j]][df$patch.x[i],df$patch.y[i]]
       if(df$infected_h[i]==0 & df$random_no[i]<=lam_h){ #if uniform random no. drawn for 'uninfected' individual is <= prob of getting infected
         df$infected_h[i] <- df$current[i] <- 1 #denoting this person is infected on this timestep
       }
@@ -169,7 +175,8 @@ simulate_summ <- function(){#function for subsequent timesteps
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     z <- Z/M
     # lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z  ###Reed-Frost
-    lam_h <- (sin(.00861*j)*.02)+.1
+    #lam_h <- (sin(.00861*j)*.02)+.1 # for single value lam_h
+    #lam_h new value has now been written within the for loops
     
     #writing a summary table
     #summ_tab[j,1] <- j

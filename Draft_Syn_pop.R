@@ -97,20 +97,7 @@ df <- as.data.frame(cbind(sim_age,gender,infected_h, tts, random_no, random_no2,
 #6. random_n2 # ...
 #7. current #a switch to detect if an individual is infected in current timestep or not
 
-
 ###initializing####
-# for(i in 1:nrow(df)){
-#   if(df$infected_h[i] && df$current[i]){ #if infected #at current timestep 
-#     
-#     
-#     df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to susceptable
-#     
-#     
-#   }
-#   
-#   df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
-#   df$current[i] <- 0 # resetting 'infected at current timestep'
-# }
 
 #first row of the summary table
 #time 0
@@ -129,7 +116,8 @@ M <- S+Z #recalculating mosquito population
 
 #m <- M/H ###no. of mosquitos doesn't change FOR NOW
 z <- Z/M
-lam_h <- m*a*b*z
+#lam_h <- m*a*b*z
+lam_h <- (sin(.0089*0)*.02)+.1
 
 time0 <- c(0, H-X, X, lam_h, S_prev, Z_prev, lam) #variable addition for simulation table
 ##above, lam_h and lam values are for the next time step
@@ -158,17 +146,6 @@ simulate_summ <- function(){#function for subsequent timesteps
       if(df$infected_h[i]==1 & df$current[i]==0 & df$random_no2[i]<=recover){
         df$infected_h[i] <- 0
       }
-      #       if(df$infected_h[i]==1 && df$current[i]==1){ #if infected #at current timestep 
-      #         
-      #         df$tts[i] <- rnorm(1,mean=1,sd=.2) * durinf #input into tts, time to become susceptable again
-      #         
-      #       }
-      
-      # df$tts[i] <- df$tts[i]-.5 #tts-.5 per timestep
-      
-      #       if(df$tts[i]<=0 && df$infected_h[i]==1){ #currently infected, but durinf is over
-      #         df$infected_h[i] <- 0 #then he becomes suscepitable again on the next timestep
-      #       }
       
       #resetting for the next round
       df$random_no[i] <- runif(1) #drawing random no. for each individual
@@ -190,7 +167,8 @@ simulate_summ <- function(){#function for subsequent timesteps
     M <- S+Z #recalculating mosquito population
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     z <- Z/M
-    lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z  ###Reed-Frost
+    # lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z  ###Reed-Frost
+    lam_h <- (sin(.0089*j)*.02)+.1
     
     #writing a summary table
     #summ_tab[j,1] <- j

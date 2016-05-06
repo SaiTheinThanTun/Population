@@ -36,9 +36,10 @@ H <- 80 #human population
 X <- 30 #infected humans
 M <- 800 #initial mosquito population
 Z <- 200 #initial infected mosquitos
-timesteps_days <- 28
-timesteps <- timesteps_days*2 #365*2 
-no_sims <- 10 #no. of simulations
+timesteps_days <- 28 #1095 #28
+timeres <- .5 #time resolution of .5 days
+timesteps <- timesteps_days*(1/timeres) #365*2 
+no_sims <- 10 #50 #10 #no. of simulations
 
 lci <- .05 #lowest confidence interval
 hci <- .95  #highest confidence interval
@@ -141,7 +142,7 @@ simulate_summ <- function(){#function for subsequent timesteps
   summ_tab[1,] <- time0 #the first line of the table. the states at time0
   
   #there's an error which one to take as time 0 (or 0.5)
-  summ_tab[,1] <- seq(0,timesteps_days,by=(1/2))
+  summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
   
   for(j in 1:timesteps+1){ #this means 2:(timesteps+1)
     

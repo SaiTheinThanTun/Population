@@ -48,7 +48,7 @@ m <- M/H
 z <- Z/M
 x <- X/H #ratio of infectious humans
 
-lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans
+lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans #this is not doing anything, since there's another assignment to lam_h
 lam <- a*c*x #lambda for mosquitos
 recover <- 1/(2*durinf) #probability of getting recovered
 
@@ -70,7 +70,7 @@ for(i in 1:length(sim_age)){
 #tmp$s_gender <- as.factor(tmp$s_gender)
 #qplot(s_age, data=tmp,fill=s_gender)
 
-####synthesizing infected population####
+####Initializing / synthesizing infected population####
 infected_h <- rep(NA,H)
 S_prob <- (H-X)/H
 I_prob <- X/H
@@ -83,8 +83,10 @@ tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
 random_no <- runif(H) # random uniform no. to decide the prob. of being infected if susceptable
 random_no2 <- runif(H) # random uniform no. to decide the prob. of transition from infected to susceptible
 current <- rep(1, H) #infected in current timestep
-patch.x <- sample(4,H, replace=TRUE)
-patch.y <- sample(4,H, replace=TRUE)
+no.patch.x <- 4 #no. of patches across x
+no.patch.y <- 4 #no. of patches across y
+patch.x <- sample(no.patch.x,H, replace=TRUE)
+patch.y <- sample(no.patch.y,H, replace=TRUE)
 
 df <- as.data.frame(cbind(sim_age,gender,infected_h, tts, random_no, random_no2, current, patch.x, patch.y)) #variable addition for populated dataframe
 
@@ -97,7 +99,6 @@ df <- as.data.frame(cbind(sim_age,gender,infected_h, tts, random_no, random_no2,
 #6. random_n2 # ...
 #7. current #a switch to detect if an individual is infected in current timestep or not
 
-###initializing####
 
 #first row of the summary table
 #time 0
@@ -150,8 +151,8 @@ simulate_summ <- function(){#function for subsequent timesteps
       #resetting for the next round
       df$random_no[i] <- runif(1) #drawing random no. for each individual
       df$random_no2[i] <- runif(1)
-      df$patch.x[i] <- sample(4,1)
-      df$patch.y[i] <- sample(4,1)
+      df$patch.x[i] <- sample(no.patch.x,1)
+      df$patch.y[i] <- sample(no.patch.y,1)
       df$current[i] <- 0 # resetting 'infected at current timestep'
     }
     #at the end of big for loop
@@ -168,7 +169,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
     z <- Z/M
     # lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z  ###Reed-Frost
-    lam_h <- (sin(.0089*j)*.02)+.1
+    lam_h <- (sin(.00861*j)*.02)+.1
     
     #writing a summary table
     #summ_tab[j,1] <- j

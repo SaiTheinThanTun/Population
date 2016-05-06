@@ -200,7 +200,7 @@ summ_tab <- simulate_summ() #this is to be used for plotting a single simulation
 
 ####plotting 1 simulation####
 par(mar=c(5,4,4,4))
-plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda",lam_h))
+plot(summ_tab[,1],summ_tab[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop")) # with lambda",lam_h))
 axis(2, ylim=c(0,17),col="blue") 
 mtext("Susceptible humans",side=2,line=2.5) 
 
@@ -239,7 +239,7 @@ hci_sims <- avg_stk_tbl(sims,'ci',ci=hci)
 colnames(avg_sims) <- colnames(hci_sims) <- colnames(lci_sims) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam') #column names for the summary table
 
 par(mar=c(5,4,4,4))
-plot(avg_sims[,1],avg_sims[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop with lambda",lam_h,"and CI",lci,'-',hci))
+plot(avg_sims[,1],avg_sims[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop")) # with lambda",lam_h,"and CI",lci,'-',hci))
 polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,2], rev(lci_sims[,2])),col=rgb(0,0,100,50,maxColorValue=255), border=NA)
 axis(2, ylim=c(0,17),col="blue") 
 mtext("Susceptible humans",side=2,line=2.5) 

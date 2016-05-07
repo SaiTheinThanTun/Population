@@ -2,39 +2,21 @@
 #copy 2 csv files: 0to97_age_prob.csv and 0to97_male_prob.csv into the 'C:/wd'
 #copy a generic function file called 'avg_stk_tbl.R' into 'C:/wd/'
 
-#this R script file does the following:
-#1. synthesize a population based upon Myanmar census data 2014, see ####codebook for df#### section for variables
-#2. input parameters are required to synthesize and simulate the population, see ####parameters#### section
-#3. create a function that runs a single simulation and summarize the result on each timestep
-#4. run multiple simulations. you can change #no. of simulations in ####parameters####
-####and create their averages with confidence interval
-#5. write csv files and plot the results
-
-#if more variables are to be added, search for this hashtag #variable addition
-#if output is needed for each timestep, search for and comment out this hashtag #outputting csv
-
-####libraries####
-#library(ggplot2)
 
 #reading in files for census data
 setwd("C:/wd")
 source('avg_stk_tbl.R')
 age_prob_0to97 <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)
 male_prob_0to97 <- read.csv("C:/wd/0to97_male_prob.csv", header=FALSE)
-#age, 98+ were unaccounted for
+
 age <- 0:97
 
 ####parameters####
 durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
-# a <- .1 #human blood feeding rate
-# b <- .3 #probability of disease transmission per bite for human
-# c <- .7 #probability a mosquito becomes infected after biting an infected human
 
-H <- 80 #human population
+H <- 80 #270 #human population
 X <- 30 #infected humans
-M <- 800 #initial mosquito population
-Z <- 200 #initial infected mosquitos
-timesteps_days <- 28 #1095 #28
+timesteps_days <- 920 #1095 #28
 timeres <- .5 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 
 no_sims <- 10 #50 #10 #no. of simulations
@@ -42,19 +24,12 @@ no_sims <- 10 #50 #10 #no. of simulations
 lci <- .05 #lowest confidence interval
 hci <- .95  #highest confidence interval
 
-#this also needs to be changed during the subsequent timesteps
-# m <- M/H
-# z <- Z/M
-# x <- X/H #ratio of infectious humans
-
-#lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans #this is not doing anything, since there's another assignment to lam_h
-# lam <- a*c*x #lambda for mosquitos
 recover <- 1/(2*durinf) #probability of getting recovered
 
 
 ####synthesizing age and gender####
 sim_age <- sample(age, H, replace=TRUE,prob=age_prob_0to97[,1])
-#hist(sim_age) 
+
 gender <- rep(NA,length(sim_age))
 
 for(i in 1:length(sim_age)){
@@ -62,12 +37,6 @@ for(i in 1:length(sim_age)){
   gender[i] <- sample(2,1,prob=c(p,1-p))
 }
 
-####testing the proportions####
-#tmp <- cbind(sim_age,gender)
-#tmp <- as.data.frame(tmp)
-#colnames(tmp) <- c('s_age','s_gender')
-#tmp$s_gender <- as.factor(tmp$s_gender)
-#qplot(s_age, data=tmp,fill=s_gender)
 
 ####Initializing / synthesizing infected population####
 infected_h <- rep(NA,H)
@@ -89,35 +58,9 @@ patch.y <- sample(no.patch.y,H, replace=TRUE)
 
 df <- as.data.frame(cbind(sim_age,gender,infected_h, tts, random_no, random_no2, current, patch.x, patch.y)) #variable addition for populated dataframe
 
-####codebook for df####
-#1. sim_age
-#2. gender
-#3. infected_h
-#4. tts #time to become susceptible again
-#5. random_n #random no. drawn from uniform distribution
-#6. random_n2 # ...
-#7. current #a switch to detect if an individual is infected in current timestep or not
 
-
-#first row of the summary table
-#time 0
 X <- sum(df$infected_h) #no. of infected humans
-# x <- X/H #ratio of infectious humans
-# #rate of change of Z from ODE
-# lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
-# S_prev <- (M-Z)
-# Z_prev <- Z #only in this first step, on later steps in the function, it was not recorded
-# M_prev <- M
-# S <- S_prev+M_prev*mui-muo*S_prev-lam*S_prev
-# Z <- Z_prev+lam*S_prev-muo*Z_prev
 
-# M <- S+Z #recalculating mosquito population
-###need to check this####
-
-#m <- M/H ###no. of mosquitos doesn't change FOR NOW
-# z <- Z/M
-#lam_h <- m*a*b*z
-#lam_h <- (sin(.0089*0)*.02)+.1 #single value seasonal forcing
 lam_h_list <- list() #a new way of initializing lam_h 20160506
 for(i in 0:timesteps){
   lam_h_list[[i+1]] <- matrix((sin(.0089*i)*.02)+.1,no.patch.x,no.patch.y) # as.data.frame(matrix((sin(.0089*i)*.02)+.1,no.patch.x,no.patch.y))
@@ -139,7 +82,6 @@ simulate_summ <- function(){#function for subsequent timesteps
   #variable addition for simulation table
   summ_tab[1,] <- time0 #the first line of the table. the states at time0
   
-  #there's an error which one to take as time 0 (or 0.5)
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
   
   for(j in 1:timesteps+1){ #this means 2:(timesteps+1)
@@ -163,20 +105,6 @@ simulate_summ <- function(){#function for subsequent timesteps
     #at the end of big for loop
     #calculate summary variables and lam_h for the next timestep
     X <- sum(df$infected_h) #no. of infected humans
-#     x <- X/H #ratio of infectious humans
-#     #rate of change of Z from ODE
-#     lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
-#     S_prev <- (M-Z)
-#     S <- S_prev+M*mui-muo*S_prev-lam*S_prev
-#     Z <- Z+lam*S_prev-muo*Z
-#     
-#     M <- S+Z #recalculating mosquito population
-#     #m <- M/H ###no. of mosquitos doesn't change FOR NOW
-#     z <- Z/M
-    # lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z  ###Reed-Frost
-    #lam_h <- (sin(.00861*j)*.02)+.1 # for single value lam_h
-    #lam_h new value has now been written within the for loops
-    
     #writing a summary table
     #summ_tab[j,1] <- j
     summ_tab[j,2] <- H-X
@@ -219,7 +147,6 @@ legend("top",legend=c("Susceptibles","Infected"),
 write.csv(summ_tab,file=paste('summary_ibm_',Sys.Date(),'.csv',sep=''))
 
 ####plotting multiple simulation####
-
 
 #creating a list of simulations
 sims <- list()

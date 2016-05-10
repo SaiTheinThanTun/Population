@@ -1,3 +1,44 @@
+
+###generic function for age distribution####
+ex_age <- function(filename='age_union.csv'){
+  age <- read.csv(filename, header=FALSE)[,1] #age vs population
+  #this can be automated to read in several file name as list and use lapply
+  l.age <- length(age) #length of age vector##also the index for the last age group which would be 98+ or 90+, etc
+  total.age <- sum(age)
+  l2model <- round(l.age*.15) #length to model #start from 20% back from last
+  
+  data.age <- tail(age, l2model)
+  data.age.target <- sum(data.age) #target population to extrapolate
+  data.age <- data.age[-(length(data.age))]
+  
+  age_fun <- function(g){
+    model.age <<- tmp <- NA
+    model.age[1] <<- data.age[1]
+    for(i in 1:(l2model-1)){
+      tmp[i] <- data.age[i]-model.age[i]
+      model.age[i+1] <<- model.age[i]*exp(g) #model.age is up to the last aggregated group. ie l2model
+    }
+    sum(tmp^2)
+  }
+  m <- optimise(age_fun, interval=c(-3,3))$minimum #value to extrapolate the age str
+  
+  
+  
+  ##while loop####
+  j <- l2model
+  while(sum(model.age)<sum(data.age)){
+    model.age[j+1] <- model.age[j]*exp(m)
+    j <- j+1
+  }
+  
+  if(sum(model.age)==sum(data.age)){
+    model.age[length(model.age)] <- sum(model.age)-sum(data.age)
+  }
+  
+}
+
+
+##draft####
 # age-exp <- function(x){
 #   y <- m*x + b
 # }
@@ -16,81 +57,44 @@
 # y <- tail(age_prob_0to97[,1], 18)
 
 
-####Fitting age structure with optimize####
-pop_after80 <- read.csv("C:/wd/age struct/actual_age_pop_aft80.csv", header=FALSE)[,1]
-pop_after80[1] <- 90000
-tmp <- NA
-age_fun <- function(g){
-  popMod <<- tmp <- NA
-  popMod[1] <<- 90000
-  for(i in 1:(length(pop_after80)-1)){
-    tmp[i] <- pop_after80[i]-popMod[i]
-    popMod[i+1] <<- popMod[i]*exp(g)
-    #tmp[i] <- pop_after80[i+1]-(pop_after80[i]*exp(g))
-  }
-  sum(tmp^2)
-}
-optimise(age_fun, interval=c(-3,3))
-
-#the result is -0.1680289
-#Lisa's result from fitting with the eyes in Excel is -.19
-
-age_fun(-0.1680289)
-a.17 <- popMod
-age_fun(-.19)
-b.19 <- popMod
-
-
-plot(pop_after80, type= 'p', col= 'black')
-lines(a.17, col= 'red')
-lines(b.19, col='blue')
-
-compareModels <- cbind(pop_after80,a.17,b.19)
-
-popMod <<- tmp <- NA
-popMod[1] <- 90000
-uptoage <- 101-80 #101
-for(i in 1:uptoage){
-  tmp[i] <- pop_after80[i]-popMod[i]
-  popMod[i+1] <- popMod[i]*exp(-0.1680289)
-}
-#98+ year is 7967
-sum(tail(popMod,4))
-
-
-###generic function for age distribution####
-#this is gonna be a function
-age <- read.csv("age_union.csv", header=FALSE)[,1] #probability of age
-#thsi can be automated to read in several file name as list and use lapply
-l.age <- length(age) #length of age vector##also the index for the last age group which would be 98+ or 90+, etc
-total.age <- sum(age)
-l2model <- round(l.age*.15) #length to model #start from 20% back from last
-
-data.age <- tail(age, l2model)
-data.age.target <- sum(data.age) #target population to extrapolate
-data.age <- data.age[-(length(data.age))]
-
-age_fun <- function(g){
-  model.age <<- tmp <- NA
-  model.age[1] <<- data.age[1]
-  for(i in 1:(l2model-1)){
-    tmp[i] <- data.age[i]-model.age[i]
-    model.age[i+1] <<- model.age[i]*exp(g) #model.age is up to the last aggregated group. ie l2model
-  }
-  sum(tmp^2)
-}
-m <- optimise(age_fun, interval=c(-3,3))$minimum #value to extrapolate the age str
-
-
-
-##while loop####
-j <- l2model
-while(sum(model.age)<sum(data.age)){
-  model.age[j+1] <- model.age[j]*exp(m)
-  j <- j+1
-}
-
-if(sum(model.age)==sum(data.age)){
-  model.age[length(model.age)] <- sum(model.age)-sum(data.age)
-}
+# ####Fitting age structure with optimize####
+# pop_after80 <- read.csv("C:/wd/age struct/actual_age_pop_aft80.csv", header=FALSE)[,1]
+# pop_after80[1] <- 90000
+# tmp <- NA
+# age_fun <- function(g){
+#   popMod <<- tmp <- NA
+#   popMod[1] <<- 90000
+#   for(i in 1:(length(pop_after80)-1)){
+#     tmp[i] <- pop_after80[i]-popMod[i]
+#     popMod[i+1] <<- popMod[i]*exp(g)
+#     #tmp[i] <- pop_after80[i+1]-(pop_after80[i]*exp(g))
+#   }
+#   sum(tmp^2)
+# }
+# optimise(age_fun, interval=c(-3,3))
+# 
+# #the result is -0.1680289
+# #Lisa's result from fitting with the eyes in Excel is -.19
+# 
+# age_fun(-0.1680289)
+# a.17 <- popMod
+# age_fun(-.19)
+# b.19 <- popMod
+# 
+# 
+# plot(pop_after80, type= 'p', col= 'black')
+# lines(a.17, col= 'red')
+# lines(b.19, col='blue')
+# 
+# compareModels <- cbind(pop_after80,a.17,b.19)
+# 
+# popMod <<- tmp <- NA
+# popMod[1] <- 90000
+# uptoage <- 101-80 #101
+# for(i in 1:uptoage){
+#   tmp[i] <- pop_after80[i]-popMod[i]
+#   popMod[i+1] <- popMod[i]*exp(-0.1680289)
+# }
+# #98+ year is 7967
+# sum(tail(popMod,4))
 

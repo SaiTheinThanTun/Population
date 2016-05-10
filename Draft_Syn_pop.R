@@ -36,7 +36,7 @@ H <- 80 #human population
 X <- 30 #infected humans
 M <- 800 #initial mosquito population
 Z <- 200 #initial infected mosquitos
-timesteps_days <- 28 #1095 #28
+timesteps_days <- 1095 #28
 timeres <- .5 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 
 no_sims <- 10 #50 #10 #no. of simulations

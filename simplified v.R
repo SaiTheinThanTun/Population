@@ -17,14 +17,14 @@ durinf <- 7 #duration of infection ###may need to readjust when transforming int
 H <- 80 #270 #human population
 X <- 30 #infected humans
 timesteps_days <- 920 #1095 #28
-timeres <- .5 #time resolution of .5 days
+timeres <- 1 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 
 no_sims <- 10 #50 #10 #no. of simulations
 
 lci <- .05 #lowest confidence interval
 hci <- .95  #highest confidence interval
 
-recover <- 1/(2*durinf) #probability of getting recovered
+recover <- 1/(durinf) #probability of getting recovered
 
 
 ####synthesizing age and gender####

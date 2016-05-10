@@ -46,3 +46,51 @@ lines(a.17, col= 'red')
 lines(b.19, col='blue')
 
 compareModels <- cbind(pop_after80,a.17,b.19)
+
+popMod <<- tmp <- NA
+popMod[1] <- 90000
+uptoage <- 101-80 #101
+for(i in 1:uptoage){
+  tmp[i] <- pop_after80[i]-popMod[i]
+  popMod[i+1] <- popMod[i]*exp(-0.1680289)
+}
+#98+ year is 7967
+sum(tail(popMod,4))
+
+
+###generic function for age distribution####
+#this is gonna be a function
+age <- read.csv("age_union.csv", header=FALSE)[,1] #probability of age
+#thsi can be automated to read in several file name as list and use lapply
+l.age <- length(age) #length of age vector##also the index for the last age group which would be 98+ or 90+, etc
+total.age <- sum(age)
+l2model <- round(l.age*.15) #length to model #start from 20% back from last
+
+data.age <- tail(age, l2model)
+data.age.target <- sum(data.age) #target population to extrapolate
+data.age <- data.age[-(length(data.age))]
+
+age_fun <- function(g){
+  model.age <<- tmp <- NA
+  model.age[1] <<- data.age[1]
+  for(i in 1:(l2model-1)){
+    tmp[i] <- data.age[i]-model.age[i]
+    model.age[i+1] <<- model.age[i]*exp(g) #model.age is up to the last aggregated group. ie l2model
+  }
+  sum(tmp^2)
+}
+m <- optimise(age_fun, interval=c(-3,3))$minimum #value to extrapolate the age str
+
+
+
+##while loop####
+j <- l2model
+while(sum(model.age)<sum(data.age)){
+  model.age[j+1] <- model.age[j]*exp(m)
+  j <- j+1
+}
+
+if(sum(model.age)==sum(data.age)){
+  model.age[length(model.age)] <- sum(model.age)-sum(data.age)
+}
+

@@ -33,7 +33,7 @@ muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
 mui <- .05
 
 H <- 80 #human population
-X <- 30 #infected humans
+X <- 1 #infected humans
 M <- 800 #initial mosquito population
 Z <- 200 #initial infected mosquitos
 timesteps_days <- 1095 #28
@@ -44,13 +44,7 @@ no_sims <- 10 #50 #10 #no. of simulations
 lci <- .05 #lowest confidence interval
 hci <- .95  #highest confidence interval
 
-#this also needs to be changed during the subsequent timesteps
-m <- M/H
-z <- Z/M
-x <- X/H #ratio of infectious humans
 
-#lam_h <- m*a*b*z #lam_h <- 0.075 #lambda for humans #this is not doing anything, since there's another assignment to lam_h
-lam <- a*c*x #lambda for mosquitos
 recover <- timeres/durinf #1/(2*durinf) #probability of getting recovered
 
 
@@ -113,12 +107,12 @@ df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patc
 # lam_h_0 <- lam_h_list[[1]][1,1]
 
 lam_h_vector <- NA
-for(i in 0:timesteps){
-  lam_h_vector[i] <- (sin(.01722*timeres*i)*.02)+.1
-}
-lam_h_0 <- lam_h_vector[1]
+# for(i in 0:timesteps){
+#   lam_h_vector[i] <- (sin(.01722*timeres*i)*.02)+.1
+# }
+#lam_h_0 <- lam_h_vector[1]
 
-time0 <- c(0, H-X, X, lam_h_0, S_prev, Z_prev, lam) #variable addition for simulation table
+#time0 <- c(0, H-X, X, lam_h_0, S_prev, Z_prev, lam) #variable addition for simulation table
 ##above, lam_h and lam values are for the next time step
 
 #######outputting csv: write an initialized file#####
@@ -128,16 +122,30 @@ write.csv(df, file='0.csv')
 #######Simulate Summary table function#####
 simulate_summ <- function(){#function for subsequent timesteps
   
-  summ_tab <- matrix(NA, nrow=timesteps+1, ncol=7) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
-  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam') #column names for the summary table
+  summ_tab <- matrix(NA, nrow=timesteps+1, ncol=8) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
+  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam', 'lam_h2') #column names for the summary table
   #variable addition for simulation table
-  summ_tab[1,] <- time0 #the first line of the table. the states at time0
+  #summ_tab[1,] <- time0 #the first line of the table. the states at time0
   
   #there's an error which one to take as time 0 (or 0.5)
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
   
-  for(j in 1:timesteps+1){ #this means 2:(timesteps+1)
+  for(j in 0:timesteps){ #this means 2:(timesteps+1)
     lam_h <- (sin(.01722*timeres*j)*.02)+.1
+    
+    #this also needs to be changed during the subsequent timesteps
+    m <- M/H
+    z <- Z/M
+    X <- sum(df$infected_h) #no. of infected humans
+    S <- (M-Z) #susceptible mosquitos
+    x <- X/H #ratio of infectious humans
+    #rate of change of Z from ODE
+    lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
+    lam_h2 <- m*a*b*z
+    
+    
+    
+    
     
     for(i in 1:nrow(df)){
       
@@ -145,20 +153,6 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$random_no2[i] <- runif(1)
       df$patch[i] <- sample(total.patch,1)
       
-      X <- sum(df$infected_h) #no. of infected humans
-      x <- X/H #ratio of infectious humans
-      #rate of change of Z from ODE
-      lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
-      S_prev <- (M-Z)
-      Z_prev <- Z #only in this first step, on later steps in the function, it was not recorded
-      M_prev <- M
-      S <- S_prev+M_prev*mui-muo*S_prev-lam*S_prev
-      Z <- Z_prev+lam*S_prev-muo*Z_prev
-      
-      M <- S+Z #recalculating mosquito population
-      
-      #m <- M/H ###no. of mosquitos doesn't change FOR NOW
-      z <- Z/M
 #       if(df$infected_h[i]==0 & df$random_no[i]<=lam_h){ #if uniform random no. drawn for 'uninfected' individual is <= prob of getting infected
 #         df$infected_h[i] <- df$current[i] <- 1 #denoting this person is infected on this timestep
 #       }
@@ -166,7 +160,7 @@ simulate_summ <- function(){#function for subsequent timesteps
 #         df$infected_h[i] <- 0
 #       }
       
-      if(df$infected_h==0){
+      if(df$infected_h[i]==0){
         if(df$random_no[i]<=lam_h){
           df$infected_h[i] <- 1
         }
@@ -176,34 +170,27 @@ simulate_summ <- function(){#function for subsequent timesteps
         }
       }
     }
-    #at the end of big for loop
-    #calculate summary variables and lam_h for the next timestep
+    #writing a summary table
+    #summ_tab[j,1] <- j
+    k <- j+1 #because the loop starts from 0
+    summ_tab[k,2] <- H-X
+    summ_tab[k,3] <- X
+    summ_tab[k,4] <-lam_h
+    summ_tab[k,5] <- S #############################
+    summ_tab[k,6] <- Z #need to have some limitation on Z, infected mosquitos
+    summ_tab[k,7] <- lam
+    summ_tab[k,8] <- lam_h2
     
-    #rate of change of Z from ODE
-    lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
-    S_prev <- (M-Z)
+    S_prev <- S
+    
     S <- S_prev+M*mui-muo*S_prev-lam*S_prev
     Z <- Z+lam*S_prev-muo*Z
     
     M <- S+Z #recalculating mosquito population
-    #m <- M/H ###no. of mosquitos doesn't change FOR NOW
-    z <- Z/M
-    # lam_h <- m*a*b*z #1-(1-(a*b*m))^z #m*a*b*z  ###Reed-Frost
-    #lam_h <- (sin(.00861*j)*.02)+.1 # for single value lam_h
-    #lam_h new value has now been written within the for loops
-    
-    #writing a summary table
-    #summ_tab[j,1] <- j
-    summ_tab[j,2] <- H-X
-    summ_tab[j,3] <- X
-    summ_tab[j,4] <-lam_h
-    summ_tab[j,5] <- S #############################
-    summ_tab[j,6] <- Z #need to have some limitation on Z, infected mosquitos
-    summ_tab[j,7] <- lam
     
     ######outputting csv of the simulation on each timestep#######
     if(j<20 | j>(max(timesteps)-10)){
-      write.csv(df, file=paste(j-1,".csv",sep=""))
+      write.csv(df, file=paste(j,".csv",sep=""))
     }
   }
   summ_tab
@@ -250,7 +237,7 @@ lci_sims <- avg_stk_tbl(sims,'ci',ci=lci)
 
 # #high CI (HCI)
 hci_sims <- avg_stk_tbl(sims,'ci',ci=hci)
-colnames(avg_sims) <- colnames(hci_sims) <- colnames(lci_sims) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam') #column names for the summary table
+colnames(avg_sims) <- colnames(hci_sims) <- colnames(lci_sims) <- colnames(summ_tab) #c('timesteps','susceptables','infected', 'lam_h','S','Z','lam') #column names for the summary table
 
 par(mar=c(5,4,4,4))
 plot(avg_sims[,1],avg_sims[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop")) # with lambda",lam_h,"and CI",lci,'-',hci))

@@ -33,7 +33,7 @@ muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
 mui <- .05
 
 H <- 80 #human population
-X <- 1 #infected humans
+X <- 10 #infected humans
 M <- 800 #initial mosquito population
 Z <- 200 #initial infected mosquitos
 timesteps_days <- 1095 #28
@@ -81,7 +81,7 @@ random_no <- random_no2 <- patch <- rep(NA, H)
 
 df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch)) #variable addition for populated dataframe
 
-####codebook for df####
+####codebook for df, modify this after finalizing####
 #1. sim_age
 #2. gender
 #3. infected_h
@@ -90,8 +90,6 @@ df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patc
 #6. random_n2 # ...
 #7. current #a switch to detect if an individual is infected in current timestep or not
 
-
-lam_h_vector <- NA
 
 #######outputting csv: write an initialized file#####
 write.csv(df, file='0.csv')
@@ -107,8 +105,9 @@ simulate_summ <- function(){#function for subsequent timesteps
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
   
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
-    lam_h <- (sin(.01722*timeres*j)*.02)+.1
+    seas <- (sin(.01722*timeres*j)*.02)+.1
     
+      
     #this also needs to be changed during the subsequent timesteps
     m <- M/H
     z <- Z/M
@@ -125,10 +124,11 @@ simulate_summ <- function(){#function for subsequent timesteps
     
     for(i in 1:nrow(df)){
       
+      
       df$random_no[i] <- runif(1) #drawing random no. for each individual
       df$random_no2[i] <- runif(1)
       df$patch[i] <- sample(total.patch,1)
-      
+      lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
 
       if(df$infected_h[i]==0){
         if(df$random_no[i]<=lam_h){

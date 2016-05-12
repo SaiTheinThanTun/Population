@@ -32,7 +32,13 @@ c <- .7 #probability a mosquito becomes infected after biting an infected human
 muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
 mui <- .05
 
+amp <- .2
+phi <- 210
+magnitude <- .8
+
+
 H <- 80 #human population
+X <- 40 #infected humans
 M <- 800 #initial mosquito population
 Z <- 200 #initial infected mosquitos
 timesteps_days <- 1095 #28
@@ -104,7 +110,7 @@ simulate_summ <- function(){#function for subsequent timesteps
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
   
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
-    seas <- (sin(.01722*timeres*j)*.02)+.2
+    seas <- amp*cos(2*pi*((j*timeres)-phi)/365)+magnitude #(sin(.01722*timeres*j)*.02)+.2
     
       
     #this also needs to be changed during the subsequent timesteps

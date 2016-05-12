@@ -14,7 +14,8 @@ colnames(sim.table) <- c('WeekNo','S','I1','I2','R','Total')
 tmp <- list()
   
 for(j in 1:no.of.timesteps){
-  lambda <- 1-(1-beta)^sum(pop==1 | pop==2) #calculating probability of getting infected
+  lambda <- 1-(1-beta)^sum(pop==1 | pop==2) #calculating probability of getting infected ##Reed-Frost
+  #lambda <- beta*sum(pop==1) #/length(pop)
   random.no <- runif(length(pop)) #creating random no.
   
   sim.table$WeekNo[j] <- j
@@ -23,7 +24,7 @@ for(j in 1:no.of.timesteps){
   sim.table$I2[j] <- sum(pop==2)
   sim.table$R[j] <- sum(pop==3)
   sim.table$Total[j] <- sim.table$S[j]+sim.table$I1[j]+sim.table$I2[j]+sim.table$R[j]
-  tmp[[j]] <- pop
+  tmp[[j]] <- pop #remove
   
   for(i in 1:length(pop)){
     if(pop[i]==0){
@@ -49,6 +50,6 @@ legend(sim.table$WeekNo[1],length(pop)/2,  c("S","I","R"), lty=c(1,1,1), lwd=c(2
 
 sim.table
 
-tmp <- do.call(rbind, tmp)
+tmp <- do.call(rbind, tmp) #remove
 
-write.csv(tmp, 'tmp.csv')
+write.csv(tmp, 'tmp.csv') #remove

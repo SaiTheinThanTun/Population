@@ -73,15 +73,9 @@ for(i in 1:H){
   infected_h[i] <- sample(c(0,1),1, prob=c(S_prob,I_prob))
 }
 
-#tts <- rep(0, H) #time to become susceptable, 1/dur_inf in normal distribution
-
-#random_no <- runif(H) # random uniform no. to decide the prob. of being infected if susceptable
-#random_no2 <- runif(H) # random uniform no. to decide the prob. of transition from infected to susceptible
-#current <- rep(1, H) #infected in current timestep
 no.patch.x <- 4 #no. of patches across x
 no.patch.y <- 4 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
-#patch <- sample(total.patch,H, replace=TRUE)
 random_no <- random_no2 <- patch <- rep(NA, H)
 
 
@@ -97,23 +91,7 @@ df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patc
 #7. current #a switch to detect if an individual is infected in current timestep or not
 
 
-
-#lam_h <- m*a*b*z
-#lam_h <- (sin(.0089*0)*.02)+.1 #single value seasonal forcing
-# lam_h_list <- list() #a new way of initializing lam_h 20160506
-# for(i in 0:timesteps){
-#   lam_h_list[[i+1]] <- matrix((sin(.01722*timeres*i)*.02)+.1,no.patch.x,no.patch.y) # as.data.frame(matrix((sin(.0089*i)*.02)+.1,no.patch.x,no.patch.y))
-# }
-# lam_h_0 <- lam_h_list[[1]][1,1]
-
 lam_h_vector <- NA
-# for(i in 0:timesteps){
-#   lam_h_vector[i] <- (sin(.01722*timeres*i)*.02)+.1
-# }
-#lam_h_0 <- lam_h_vector[1]
-
-#time0 <- c(0, H-X, X, lam_h_0, S_prev, Z_prev, lam) #variable addition for simulation table
-##above, lam_h and lam values are for the next time step
 
 #######outputting csv: write an initialized file#####
 write.csv(df, file='0.csv')
@@ -125,9 +103,7 @@ simulate_summ <- function(){#function for subsequent timesteps
   summ_tab <- matrix(NA, nrow=timesteps+1, ncol=8) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
   colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam', 'lam_h2') #column names for the summary table
   #variable addition for simulation table
-  #summ_tab[1,] <- time0 #the first line of the table. the states at time0
-  
-  #there's an error which one to take as time 0 (or 0.5)
+
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
   
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
@@ -153,13 +129,7 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$random_no2[i] <- runif(1)
       df$patch[i] <- sample(total.patch,1)
       
-#       if(df$infected_h[i]==0 & df$random_no[i]<=lam_h){ #if uniform random no. drawn for 'uninfected' individual is <= prob of getting infected
-#         df$infected_h[i] <- df$current[i] <- 1 #denoting this person is infected on this timestep
-#       }
-#       if(df$infected_h[i]==1 & df$current[i]==0 & df$random_no2[i]<=recover){
-#         df$infected_h[i] <- 0
-#       }
-      
+
       if(df$infected_h[i]==0){
         if(df$random_no[i]<=lam_h){
           df$infected_h[i] <- 1

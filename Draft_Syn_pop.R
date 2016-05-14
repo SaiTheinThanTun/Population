@@ -81,11 +81,10 @@ for(i in 1:H){
 no.patch.x <- 4 #no. of patches across x
 no.patch.y <- 4 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
-patch <- sample(total.patch,H, replace=TRUE)
-random_no <- random_no2 <- rep(NA, H)
+patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
 
 
-df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch)) #variable addition for populated dataframe
+df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h)) #variable addition for populated dataframe
 
 
 ####codebook for df, modify this after finalizing####
@@ -106,7 +105,7 @@ write.csv(df, file='0.csv')
 simulate_summ <- function(){#function for subsequent timesteps
   
   summ_tab <- matrix(NA, nrow=timesteps+1, ncol=8) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
-  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam', 'lam_h2') #column names for the summary table
+  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'seas','S','Z','lam', 'lam_h2') #column names for the summary table
   #variable addition for simulation table
 
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
@@ -114,6 +113,9 @@ simulate_summ <- function(){#function for subsequent timesteps
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
     seas <- amp*cos(2*pi*((j*timeres)-phi)/365)+magnitude #(sin(.01722*timeres*j)*.02)+.2
     
+    df$patch <- sample(total.patch,H, replace=TRUE)
+    df$random_no <- runif(H)
+    df$random_no2 <- runif(H)
       
     #this also needs to be changed during the subsequent timesteps
     m <- M/H
@@ -140,16 +142,12 @@ simulate_summ <- function(){#function for subsequent timesteps
     
     
     for(i in 1:nrow(df)){
-      
-      
-      df$random_no[i] <- runif(1) #drawing random no. for each individual
-      df$random_no2[i] <- runif(1)
-      df$patch[i] <- sample(total.patch,1)
+
       #lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
-      lam_h <- lam_h_vector[df$patch[i]]
+      df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
       
       if(df$infected_h[i]==0){
-        if(df$random_no[i]<=lam_h){
+        if(df$random_no[i]<=df$patch.lam_h[i]){
           df$infected_h[i] <- 1
         }
       } else{
@@ -163,7 +161,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     k <- j+1 #because the loop starts from 0
     summ_tab[k,2] <- H-X
     summ_tab[k,3] <- X
-    summ_tab[k,4] <-lam_h
+    summ_tab[k,4] <-seas
     summ_tab[k,5] <- S #############################
     summ_tab[k,6] <- Z #need to have some limitation on Z, infected mosquitos
     summ_tab[k,7] <- lam

@@ -20,7 +20,7 @@ X <- 40 #infected humans
 
 
 timesteps <- 1095 #365*2 
-
+no_sims <- 10 #50 #10 #no. of simulations
 
 
 recover <- 1/durinf #1/(2*durinf) #probability of getting recovered

@@ -22,7 +22,7 @@ source('avg_stk_tbl.R')
 age_prob <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)[,1]
 male_prob_0to97 <- read.csv("C:/wd/0to97_male_prob.csv", header=FALSE) #consider this later
 #age, 98+ were unaccounted for
-age <- 0:length(age_prob)
+age <- 0:(length(age_prob)-1)
 
 ####parameters####
 durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
@@ -60,7 +60,7 @@ gender <- rep(NA,length(sim_age))
 
 for(i in 1:length(sim_age)){
   p <- male_prob_0to97[sim_age[i]+1,1] #male_prob is already arranged in ascending age
-  gender[i] <- sample(2,1,prob=c(p,1-p))
+  gender[i] <- sample(c(0,1),1,prob=c(1-p,p))
 }
 
 ####testing the proportions####

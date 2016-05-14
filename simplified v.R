@@ -1,19 +1,15 @@
 #before you run, create a directory named 'wd' under 'C:/'
-#copy 2 csv files: 0to97_age_prob.csv and 0to97_male_prob.csv into the 'C:/wd'
+#copy a csv file: china_age_prob.csv into the 'C:/wd'
 
 
 #reading in files for census data
 setwd("C:/wd")
 age_prob <- read.csv("C:/wd/china_age_prob.csv", header=FALSE)[,1]
-age <- 0:length(age_prob)
+age <- 0:(length(age_prob)-1)
 
 ####parameters####
 durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
-a <- .1 #human blood feeding rate
-b <- .3 #probability of disease transmission per bite for human
-c <- .7 #probability a mosquito becomes infected after biting an infected human
-muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
-mui <- .05
+
 
 amp <- .2
 phi <- 210
@@ -22,29 +18,23 @@ magnitude <- .8
 
 H <- 80 #human population
 X <- 40 #infected humans
-M <- 800 #initial mosquito population
-Z <- 200 #initial infected mosquitos
-timesteps_days <- 1095 #28
-timeres <- 1 #time resolution of .5 days
-timesteps <- timesteps_days*(1/timeres) #365*2 
+
+
+timesteps <- 1095 #365*2 
 no_sims <- 10 #50 #10 #no. of simulations
 
-lci <- .05 #lowest confidence interval
-hci <- .95  #highest confidence interval
 
-
-recover <- timeres/durinf #1/(2*durinf) #probability of getting recovered
+recover <- 1/durinf #1/(2*durinf) #probability of getting recovered
 
 
 ####synthesizing age and gender####
-sim_age <- sample(age, H, replace=TRUE,prob=age_prob[,1])
+sim_age <- sample(age, H, replace=TRUE,prob=age_prob)
 #hist(sim_age) 
-gender <- rep(NA,length(sim_age))
+#gender <- rep(NA,length(sim_age))
+prob_male <- .55
 
-for(i in 1:length(sim_age)){
-  p <- male_prob_0to97[sim_age[i]+1,1] #male_prob is already arranged in ascending age
-  gender[i] <- sample(2,1,prob=c(p,1-p))
-}
+gender <- sample(c(0,1),H, replace=TRUE,prob=c(1-prob_male, prob_male))
+
 
 ####testing the proportions####
 #tmp <- cbind(sim_age,gender)
@@ -76,25 +66,24 @@ df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patc
 #######Simulate Summary table function#####
 simulate_summ <- function(){#function for subsequent timesteps
   
-  summ_tab <- matrix(NA, nrow=timesteps+1, ncol=8) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
-  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h','S','Z','lam', 'lam_h2') #column names for the summary table
-  #variable addition for simulation table
+  summ_tab <- matrix(NA, nrow=timesteps+1, ncol=4) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
+  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'lam_h') #column names for the summary table
   
-  summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
+  #summ_tab[,1] <- seq(0,timesteps,by=1)
   
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
-    seas <- amp*cos(2*pi*((j*timeres)-phi)/365)+magnitude #(sin(.01722*timeres*j)*.02)+.2
+    seas <- amp*cos(2*pi*(j-phi)/365)+magnitude #(sin(.01722*j)*.02)+.2
     
     
     #this also needs to be changed during the subsequent timesteps
-    m <- M/H
-    z <- Z/M
-    X <- sum(df$infected_h) #no. of infected humans
-    S <- (M-Z) #susceptible mosquitos
-    x <- X/H #ratio of infectious humans
-    #rate of change of Z from ODE
-    lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
-    lam_h2 <- m*a*b*z
+#     m <- M/H
+#     z <- Z/M
+     X <- sum(df$infected_h) #no. of infected humans
+#     S <- (M-Z) #susceptible mosquitos
+#     x <- X/H #ratio of infectious humans
+#     #rate of change of Z from ODE
+#     lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
+#     lam_h2 <- m*a*b*z
     
     preval.patch <- as.vector(by(df$infected_h,df$patch,sum) / by(df$infected_h,df$patch,length))
     if(!all(1:total.patch %in% unique(df$patch))){ #this solves the situation where no individual is on a particular patch
@@ -130,22 +119,13 @@ simulate_summ <- function(){#function for subsequent timesteps
       }
     }
     #writing a summary table
-    #summ_tab[j,1] <- j
     k <- j+1 #because the loop starts from 0
+    summ_tab[k,1] <- j
     summ_tab[k,2] <- H-X
     summ_tab[k,3] <- X
     summ_tab[k,4] <-lam_h
-    summ_tab[k,5] <- S #############################
-    summ_tab[k,6] <- Z #need to have some limitation on Z, infected mosquitos
-    summ_tab[k,7] <- lam
-    summ_tab[k,8] <- lam_h2
     
-    S_prev <- S
     
-    S <- S_prev+M*mui-muo*S_prev-lam*S_prev
-    Z <- Z+lam*S_prev-muo*Z
-    
-    M <- S+Z #recalculating mosquito population
     
     ######outputting csv of the simulation on each timestep#######
     if(j<20 | j>(max(timesteps)-10)){
@@ -171,7 +151,7 @@ axis(4, ylim=c(0,17),col="red")
 mtext("Infected humans",side=4, line=2.5)
 
 axis(1,pretty(range(summ_tab[,1]),10))
-mtext(paste("Timesteps (Time resolution: ",timeres," day)",sep=""),side=1,col="black",line=2.5)
+mtext(paste("Timesteps (Time resolution: ",1," day)",sep=""),side=1,col="black",line=2.5)
 
 legend("top",legend=c("Susceptibles","Infected"),
        text.col=c("blue","red"),pch= "__", col=c("blue","red"))

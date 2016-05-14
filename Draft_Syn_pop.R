@@ -19,10 +19,10 @@
 #reading in files for census data
 setwd("C:/wd")
 source('avg_stk_tbl.R')
-age_prob_0to97 <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)
-male_prob_0to97 <- read.csv("C:/wd/0to97_male_prob.csv", header=FALSE)
+age_prob <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)[,1]
+male_prob_0to97 <- read.csv("C:/wd/0to97_male_prob.csv", header=FALSE) #consider this later
 #age, 98+ were unaccounted for
-age <- 0:97
+age <- 0:length(age_prob)
 
 ####parameters####
 durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
@@ -54,7 +54,7 @@ recover <- timeres/durinf #1/(2*durinf) #probability of getting recovered
 
 
 ####synthesizing age and gender####
-sim_age <- sample(age, H, replace=TRUE,prob=age_prob_0to97[,1])
+sim_age <- sample(age, H, replace=TRUE,prob=age_prob)
 #hist(sim_age) 
 gender <- rep(NA,length(sim_age))
 

@@ -81,12 +81,10 @@ for(i in 1:H){
 no.patch.x <- 4 #no. of patches across x
 no.patch.y <- 4 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
-patch <- sample(total.patch,H, replace=TRUE)
-random_no <- random_no2 <- rep(NA, H)
+random_no <- random_no2 <- patch <- rep(NA, H)
 
 
 df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch)) #variable addition for populated dataframe
-
 
 ####codebook for df, modify this after finalizing####
 #1. sim_age
@@ -125,16 +123,6 @@ simulate_summ <- function(){#function for subsequent timesteps
     lam <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
     lam_h2 <- m*a*b*z
     
-    preval.patch <- as.vector(by(df$infected_h,df$patch,sum) / by(df$infected_h,df$patch,length))
-    if(!all(1:total.patch %in% unique(df$patch))){ #this solves the situation where no individual is on a particular patch
-      putback0 <- which(!(1:total.patch %in% df$patch))
-      
-      for(k in 0:(length(putback0)-1)){
-        preval.patch <- append(preval.patch,0,after=putback0[k+1]-1)
-      }
-    } 
-    
-    lam_h_vector <- seas*preval.patch #seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i])))
     
     
     
@@ -145,9 +133,8 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$random_no[i] <- runif(1) #drawing random no. for each individual
       df$random_no2[i] <- runif(1)
       df$patch[i] <- sample(total.patch,1)
-      #lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
-      lam_h <- lam_h_vector[df$patch[i]]
-      
+      lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
+
       if(df$infected_h[i]==0){
         if(df$random_no[i]<=lam_h){
           df$infected_h[i] <- 1

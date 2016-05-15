@@ -1,7 +1,6 @@
 #before you run, create a directory named 'wd' under 'C:/'
 #copy a csv file: age_prob.csv into the 'C:/wd'
 
-
 #reading in files for census data
 setwd("C:/wd")
 age_prob <- read.csv("C:/wd/age_prob.csv", header=FALSE)[,1]
@@ -15,37 +14,41 @@ phi <- 210
 magnitude <- .4
 
 H <- 200 #human population
-X <- 1 #infected humans
+X <- 190 #infected humans
 
 timesteps <- 365 #1095 #365*2 
 
 recover <- 1/durinf #1/(2*durinf) #probability of getting recovered
 
-####synthesizing age and gender####
+####synthesizing age and male####
 sim_age <- sample(age, H, replace=TRUE,prob=age_prob)
 #hist(sim_age) 
-#gender <- rep(NA,length(sim_age))
+#male <- rep(NA,length(sim_age))
 prob_male <- .55
 
-gender <- sample(c(0,1),H, replace=TRUE,prob=c(1-prob_male, prob_male))
+male <- sample(c(0,1),H, replace=TRUE,prob=c(1-prob_male, prob_male))
 # ###testing the proportions####
-# tmp <- cbind(sim_age,gender)
-# tmp <- as.data.frame(tmp)
-# colnames(tmp) <- c('s_age','s_gender')
-# tmp$s_gender <- as.factor(tmp$s_gender)
-# qplot(s_age, data=tmp,fill=s_gender)
+tmp <- as.data.frame(cbind(sim_age,male))
+colnames(tmp) <- c('age','male')
+tmp$male <- as.factor(tmp$male)
+ggplot(data=tmp, aes(x=age,fill=male, colour=male))+
+  geom_histogram(subset=.(male==1), binwidth=5, alpha=.8)+
+  geom_histogram(subset=.(male==0),aes(y=..count..*(-1)),binwidth=5, alpha=.8)+
+  scale_y_continuous(breaks=seq(-(dim(tmp)[1]*.2),dim(tmp)[1]*.2,5),labels=abs(seq(-(dim(tmp)[1]*.2),dim(tmp)[1]*.2,5)))+
+  coord_flip()
+
 
 ####Initializing / synthesizing infected population####
 infected_h <- c(rep(1,X),rep(0,H-X))
 
-no.patch.x <- 4 #no. of patches across x
-no.patch.y <- 4 #no. of patches across y
+no.patch.x <- 40 #no. of patches across x
+no.patch.y <- 40 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
 
 patch.lam <- random_no <- random_no2 <- patch <- rep(NA, H)
 
 
-df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam)) #variable addition for populated dataframe
+df <- as.data.frame(cbind(sim_age,male,infected_h, random_no, random_no2, patch, patch.lam)) #variable addition for populated dataframe
 
 #######Simulate Summary table function#####
 # simulate_summ <- function(){#function for subsequent timesteps

@@ -1,7 +1,7 @@
 #ball game in IBM
-initS <- 19 #initial susceptible population
+initS <- 1900 #initial susceptible population
 initI1 <- 1 
-beta <- .1 #effective contact
+beta <- 2 #.1 #effective contact
 no.of.timesteps <- 10
 
 #S -> I1 -> I2 -> R
@@ -12,10 +12,14 @@ pop <- append(rep(0,initS),rep(1,initI1))
 sim.table <- as.data.frame(matrix(NA, no.of.timesteps, 6))
 colnames(sim.table) <- c('WeekNo','S','I1','I2','R','Total')
 tmp <- list()
+lambda <- NA
+real <- NA
   
 for(j in 1:no.of.timesteps){
-  lambda <- 1-(1-beta)^sum(pop==1 | pop==2) #calculating probability of getting infected ##Reed-Frost
-  #lambda <- beta*sum(pop==1) #/length(pop)
+#   lambda[j] <- 1-(1-beta)^sum(pop==1 | pop==2) #/length(pop)) #calculating probability of getting infected ##Reed-Frost
+#   lambda[j] <- beta*sum(pop==1| pop==2) #/length(pop)
+  lambda[j] <- 1-exp(-beta*sum(pop==1| pop==2)/length(pop))
+  real[j] <- beta*sum(pop==1 | pop ==2)/length(pop)
   random.no <- runif(length(pop)) #creating random no.
   
   sim.table$WeekNo[j] <- j
@@ -28,7 +32,7 @@ for(j in 1:no.of.timesteps){
   
   for(i in 1:length(pop)){
     if(pop[i]==0){
-      if(random.no[i]<lambda){
+      if(random.no[i]<lambda[j]){
         pop[i] <- pop[i] + 1
       }
     }
@@ -50,6 +54,6 @@ legend(sim.table$WeekNo[1],length(pop)/2,  c("S","I","R"), lty=c(1,1,1), lwd=c(2
 
 sim.table
 
-tmp <- do.call(rbind, tmp) #remove
-
-write.csv(tmp, 'tmp.csv') #remove
+# tmp <- do.call(rbind, tmp) #remove
+# 
+# write.csv(tmp, 'tmp.csv') #remove

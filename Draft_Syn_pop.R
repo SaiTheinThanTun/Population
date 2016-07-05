@@ -183,7 +183,7 @@ simulate_summ <- function(){#function for subsequent timesteps
 }
 
 summ_tab <- simulate_summ() #this is to be used for plotting a single simulation
-
+#system.time( simulate_summ() )
 
 ####plotting 1 simulation####
 par(mar=c(5,4,4,4))

@@ -26,9 +26,9 @@ age <- 0:(length(age_prob)-1)
 
 ####parameters####
 durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
-a <- .1 #human blood feeding rate
+a <- 5 #human blood feeding rate
 b <- .3 #probability of disease transmission per bite for human
-c <- .7 #probability a mosquito becomes infected after biting an infected human
+c_ <- .7 #probability a mosquito becomes infected after biting an infected human
 muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
 mui <- .05
 
@@ -81,12 +81,12 @@ for(i in 1:H){
 no.patch.x <- 4 #no. of patches across x
 no.patch.y <- 4 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
-patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
+patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
 
 patch.mosq <- matrix(NA,total.patch,2) #init mosq data on each patch
 patch.mosq <- matrix(rep(c(Z,M),total.patch),total.patch,2, byrow = TRUE)
 
-df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h)) #variable addition for populated dataframe
+df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h, patch.lam_m)) #variable addition for populated dataframe
 
 
 ####codebook for df, modify this after finalizing####
@@ -107,7 +107,7 @@ write.csv(df, file='0.csv')
 simulate_summ <- function(){#function for subsequent timesteps
   
   summ_tab <- matrix(NA, nrow=timesteps+1, ncol=8) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
-  colnames(summ_tab) <- c('timesteps','susceptables','infected', 'seas','S','Z','lam_m_vector_avg', 'lam_h_vector_avg') #column names for the summary table
+  colnames(summ_tab) <- c('timesteps','susceptables_avg','infected_avg', 'seas','S_avg','Z_avg','lam_m_vector_avg', 'lam_h_vector_avg') #column names for the summary table
   #variable addition for simulation table
 
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
@@ -117,35 +117,45 @@ simulate_summ <- function(){#function for subsequent timesteps
     
     df$patch <- sample(total.patch,H, replace=TRUE)
     df$patch <- as.factor(df$patch) #,levels=as.character(1:total.patch))
+    if(length(levels(df$patch))!=total.patch) print("some patch(es) have no human")
     df$random_no <- runif(H)
     df$random_no2 <- runif(H)
       
-    #this also needs to be changed during the subsequent timesteps
-    m <- patch.mosq[,2]/H # M/H, vector for m
-    z <- patch.mosq[,1]/patch.mosq[,2] #Z/M, vector for z
     
-    X <- sum(df$infected_h) #no. of infected humans
-    S <- (M-Z) #susceptible mosquitos
+    patch.h <- as.matrix(table(df$patch,df$infected_h))
+    X <- patch.h[,2]
+    H_patch <- (patch.h[,1]+patch.h[,2])
+    x <- X/H_patch
+    
+    #this also needs to be changed during the subsequent timesteps
+    Z <- patch.mosq[as.numeric(levels(df$patch)),1]
+    M <- patch.mosq[as.numeric(levels(df$patch)),2]
+    m <- M/H_patch # M/H, vector for m
+    z <- Z/M #Z/M, vector for z
+    S <- M-Z #susceptible mosquitos
+    
+    #X <- sum(df$infected_h) #no. of infected humans
+    #S <- (M-Z) #susceptible mosquitos
     #x <- X/H #ratio of infectious humans
     #rate of change of Z from ODE
-    
-    table(df$patch,df$infected_h)
-    patch.h <- as.matrix(table(df$patch,df$infected_h))
-    
-    x <- patch.h[,2]/(patch.h[,1]+patch.h[,2])
+
     
     #as df$patch is a vector, there;s no need to check of the consistency with the total.patch
+    ####resolving NA and NaN values
+    x[is.na(x)] <- 0
+    x[is.nan(x)] <- 0
     
-    x <- as.vector(by(df$infected_h,df$patch,sum) / by(df$infected_h,df$patch,length)) #this is x by patch
-    if(!all(1:total.patch %in% unique(df$patch))){ #this solves the situation where no individual is on a particular patch
-      putback0 <- which(!(1:total.patch %in% df$patch))
-      
-      for(k in 0:(length(putback0)-1)){
-        x <- append(x,0,after=putback0[k+1]-1)
-      }
-    } 
     
-    lam_m_vector <- a*c*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
+#     x <- as.vector(by(df$infected_h,df$patch,sum) / by(df$infected_h,df$patch,length)) #this is x by patch
+#     if(!all(1:total.patch %in% unique(df$patch))){ #this solves the situation where no individual is on a particular patch
+#       putback0 <- which(!(1:total.patch %in% df$patch))
+#       
+#       for(k in 0:(length(putback0)-1)){
+#         x <- append(x,0,after=putback0[k+1]-1)
+#       }
+#     } 
+    
+    lam_m_vector <- a*c_*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
     lam_h_vector <- m*a*b*z
     #seas*x #seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i])))
     
@@ -158,12 +168,12 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]]
       
-      if(df$infected_h[i]==0){
-        if(df$random_no[i]<=df$patch.lam_h[i]){
+      if(df$infected_h[i]==0){ #if not infected
+        if(df$random_no[i]<=df$patch.lam_h[i]){ #if getting infected
           df$infected_h[i] <- 1
         }
       } else{
-        if(df$random_no2[i]<=recover){
+        if(df$random_no2[i]<=recover){ #if infected, but getting recovered
           df$infected_h[i] <- 0
         }
       }
@@ -171,20 +181,25 @@ simulate_summ <- function(){#function for subsequent timesteps
     #writing a summary table
     #summ_tab[j,1] <- j
     k <- j+1 #because the loop starts from 0
-    summ_tab[k,2] <- H-X
-    summ_tab[k,3] <- X
+    summ_tab[k,2] <- mean(H_patch-X)
+    summ_tab[k,3] <- mean(X)
     summ_tab[k,4] <-seas
-    summ_tab[k,5] <- S #############################
-    summ_tab[k,6] <- Z #need to have some limitation on Z, infected mosquitos
+    summ_tab[k,5] <- mean(S) #############################
+    summ_tab[k,6] <- mean(Z) #need to have some limitation on Z, infected mosquitos
     summ_tab[k,7] <- mean(lam_m_vector)
     summ_tab[k,8] <- mean(lam_h_vector)
     
-    S_prev <- S
-    
-    S <- S_prev+M*mui-muo*S_prev-lam*S_prev
-    Z <- Z+lam*S_prev-muo*Z
-    
-    M <- S+Z #recalculating mosquito population
+    S_prev <- NA
+    #for loop for patches
+    for(i2 in 1:total.patch){
+      S_prev[i2] <- S[i2]
+      
+      S[i2] <- S_prev[i2]+M[i2]*mui-muo*S_prev[i2]-lam_m_vector[i2]*S_prev[i2]
+      Z[i2] <- Z[i2]+lam_m_vector[i2]*S_prev[i2]-muo*Z[i2]
+      
+      M[i2] <- S[i2]+Z[i2]
+    }
+     #recalculating mosquito population
     
     ######outputting csv of the simulation on each timestep#######
     if(j<20 | j>(max(timesteps)-10)){

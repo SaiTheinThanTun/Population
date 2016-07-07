@@ -178,7 +178,7 @@ simulate_summ <- function(){#function for subsequent timesteps
         }
       }
     }
-    #writing a summary table
+    #writing a summary table ###maybe move this up
     #summ_tab[j,1] <- j
     k <- j+1 #because the loop starts from 0
     summ_tab[k,2] <- length(df$infected_h)-sum(df$infected_h) #median(H_patch-X)

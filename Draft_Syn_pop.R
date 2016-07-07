@@ -181,9 +181,9 @@ simulate_summ <- function(){#function for subsequent timesteps
     #writing a summary table
     #summ_tab[j,1] <- j
     k <- j+1 #because the loop starts from 0
-    summ_tab[k,2] <- mean(H_patch-X)
-    summ_tab[k,3] <- mean(X)
-    summ_tab[k,4] <-seas
+    summ_tab[k,2] <- length(df$infected_h)-sum(df$infected_h) #median(H_patch-X)
+    summ_tab[k,3] <- sum(df$infected_h) #median(X)
+    summ_tab[k,4] <- seas
     summ_tab[k,5] <- mean(S) #############################
     summ_tab[k,6] <- mean(Z) #need to have some limitation on Z, infected mosquitos
     summ_tab[k,7] <- mean(lam_m_vector)
@@ -210,7 +210,7 @@ simulate_summ <- function(){#function for subsequent timesteps
 }
 
 summ_tab <- simulate_summ() #this is to be used for plotting a single simulation
-#system.time( simulate_summ() )
+system.time( simulate_summ() )
 
 ####plotting 1 simulation####
 par(mar=c(5,4,4,4))

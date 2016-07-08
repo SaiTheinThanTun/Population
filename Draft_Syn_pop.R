@@ -26,7 +26,7 @@ age <- 0:(length(age_prob)-1)
 
 ####parameters####
 durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
-a <- 5 #human blood feeding rate
+a <- .15 #human blood feeding rate
 b <- .3 #probability of disease transmission per bite for human
 c_ <- .7 #probability a mosquito becomes infected after biting an infected human
 muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
@@ -39,8 +39,8 @@ magnitude <- .8
 
 H <- 80 #human population
 X <- 40 #infected humans
-M <- 800 #initial mosquito population
-Z <- 200 #initial infected mosquitos
+M <- 80 #800 #initial mosquito population
+Z <- 20 #200 #initial infected mosquitos
 timesteps_days <- 1095 #28
 timeres <- 1 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 
@@ -81,12 +81,13 @@ for(i in 1:H){
 no.patch.x <- 4 #no. of patches across x
 no.patch.y <- 4 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
-patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
+
+prob_infected <- prob_recovery <- patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
 
 patch.mosq <- matrix(NA,total.patch,2) #init mosq data on each patch
 patch.mosq <- matrix(rep(c(Z,M),total.patch),total.patch,2, byrow = TRUE)
 
-df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h, patch.lam_m)) #variable addition for populated dataframe
+df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h, patch.lam_m,prob_infected, prob_recovery)) #variable addition for populated dataframe
 
 
 ####codebook for df, modify this after finalizing####
@@ -114,6 +115,7 @@ simulate_summ <- function(){#function for subsequent timesteps
   
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
     seas <- amp*cos(2*pi*((j*timeres)-phi)/365)+magnitude #(sin(.01722*timeres*j)*.02)+.2
+    #this is yet to be incorporated
     
     df$patch <- sample(total.patch,H, replace=TRUE)
     df$patch <- as.factor(df$patch) #,levels=as.character(1:total.patch))
@@ -169,7 +171,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     summ_tab[k,5] <- mean(S) #############################
     summ_tab[k,6] <- mean(Z) #need to have some limitation on Z, infected mosquitos
     summ_tab[k,7] <- mean(lam_m_vector)
-    summ_tab[k,8] <- mean(lam_h_vector)
+    summ_tab[k,8] <- mean(df$prob_infected) #, na.rm=TRUE) #mean(prob_recovery) #mean(lam_h_vector)
     
     
     
@@ -179,13 +181,16 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]]
       
+      df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*j)
+      df$prob_recovery[i] <- 1-exp(-recover*j)
+                           
       if(df$infected_h[i]==0){ #if not infected
-        if(df$random_no[i]<= (1-exp(-df$patch.lam_h[i]*j)){ #if getting infected #1-exp(-k*t)
+        if(df$random_no[i]<= df$prob_infected[i]){ #if getting infected #1-exp(-k*t)
             #this calculated for each patch and use here efficiently
           df$infected_h[i] <- 1
         }
       } else{
-        if(df$random_no2[i]<= (1-exp(-recover*j)){ #if infected, but getting recovered
+        if(df$random_no2[i]<= df$prob_recovery[i]){ #if infected, but getting recovered
           df$infected_h[i] <- 0
         }
       }

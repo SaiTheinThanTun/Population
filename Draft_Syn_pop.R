@@ -180,11 +180,12 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]]
       
       if(df$infected_h[i]==0){ #if not infected
-        if(df$random_no[i]<=df$patch.lam_h[i]){ #if getting infected
+        if(df$random_no[i]<= (1-exp(-df$patch.lam_h[i]*j)){ #if getting infected #1-exp(-k*t)
+            #this calculated for each patch and use here efficiently
           df$infected_h[i] <- 1
         }
       } else{
-        if(df$random_no2[i]<=recover){ #if infected, but getting recovered
+        if(df$random_no2[i]<= (1-exp(-recover*j)){ #if infected, but getting recovered
           df$infected_h[i] <- 0
         }
       }

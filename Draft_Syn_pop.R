@@ -158,7 +158,18 @@ simulate_summ <- function(){#function for subsequent timesteps
     lam_m_vector <- a*c_*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
     lam_h_vector <- m*a*b*z
     #seas*x #seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i])))
-    
+    H_summ <- length(df$infected_h)
+    X_summ <- sum(df$infected_h)
+    #writing a summary table ###maybe move this up
+    #summ_tab[j,1] <- j
+    k <- j+1 #because the loop starts from 0
+    summ_tab[k,2] <- H_summ-X_summ #median(H_patch-X)
+    summ_tab[k,3] <- X_summ #median(X)
+    summ_tab[k,4] <- seas
+    summ_tab[k,5] <- mean(S) #############################
+    summ_tab[k,6] <- mean(Z) #need to have some limitation on Z, infected mosquitos
+    summ_tab[k,7] <- mean(lam_m_vector)
+    summ_tab[k,8] <- mean(lam_h_vector)
     
     
     
@@ -178,16 +189,7 @@ simulate_summ <- function(){#function for subsequent timesteps
         }
       }
     }
-    #writing a summary table ###maybe move this up
-    #summ_tab[j,1] <- j
-    k <- j+1 #because the loop starts from 0
-    summ_tab[k,2] <- length(df$infected_h)-sum(df$infected_h) #median(H_patch-X)
-    summ_tab[k,3] <- sum(df$infected_h) #median(X)
-    summ_tab[k,4] <- seas
-    summ_tab[k,5] <- mean(S) #############################
-    summ_tab[k,6] <- mean(Z) #need to have some limitation on Z, infected mosquitos
-    summ_tab[k,7] <- mean(lam_m_vector)
-    summ_tab[k,8] <- mean(lam_h_vector)
+    
     
     S_prev <- NA
     #for loop for patches
@@ -202,8 +204,8 @@ simulate_summ <- function(){#function for subsequent timesteps
      #recalculating mosquito population
     
     ######outputting csv of the simulation on each timestep#######
-    if(j<20 | j>(max(timesteps)-10)){
-      write.csv(df, file=paste(j,".csv",sep=""))
+    if(k<20 | k>(max(timesteps)-10)){
+      write.csv(df, file=paste(k,".csv",sep=""))
     }
   }
   summ_tab

@@ -65,8 +65,9 @@ total.patch <- no.patch.x*no.patch.y
 
 prob_infected <- prob_recovery <- patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
 
-patch.mosq <- matrix(NA,total.patch,2) #init mosq data on each patch
-patch.mosq <- matrix(rep(c(Z,M),total.patch),total.patch,2, byrow = TRUE)
+
+#patch.mosq <- matrix(NA,total.patch,3) #init mosq data on each patch
+patch.mosq <- matrix(rep(c(Z,M, M-Z),total.patch),total.patch,3, byrow = TRUE)
 
 df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h, patch.lam_m,prob_infected, prob_recovery)) #variable addition for populated dataframe
 
@@ -95,55 +96,34 @@ write.csv(summ_tab,file=paste('summary_ibm_',Sys.Date(),'.csv',sep=''))
 
 ###end of IBM####
 
-parameters_r <- reactive({
-  c(mui=input$mui,    # birth #lifespan of mosquito 10 days
-    muo=input$muo,    # death
+parameters <- c(
+  c(mui=mui,    # birth #lifespan of mosquito 10 days
+    muo=muo,    # death
     #beta= #per capita effective contact with infected human per unit time
     #ce = (.3*.01), #probability of disease transmission per bite * biting rate
-    a = input$a, #human blood feeding rate
-    b = input$beta_h, #probability of disease transmission per bite for human
-    c = input$c, ##probability of disease transmission per bite for mosquitos
+    a = a, #human blood feeding rate
+    b = b, #probability of disease transmission per bite for human
+    c = c_, ##probability of disease transmission per bite for mosquitos
     #beta = input$beta, #probability of disease transmission per bite for mosquitos
-    durinf = input$durinf, #duration of infection in days * 2, because of 1/2 day time step
-    immunity = input$immunity * 2 #duration of immunity * 2, because of 1/2 day time step
-  )})
+    recover = recover #duration of infection in days * 2, because of 1/2 day time step
+    #immunity = input$immunity * 2 #duration of immunity * 2, because of 1/2 day time step
+  ))
 
-lam_h <- reactive({
-  parameter <- parameters_r()
-  #lam_h <- m*a*b*z
-  lam_h <- (input$M/input$H)*parameter[3]*parameter[4]*(input$Z/input$M)
-})
 
-ode_out <- reactive({
-  # define the number of weeks to run the model
-  times <- seq(0, input$days, by = (1/2)) #previously week was 52, 7 days/14 = 1/2 day timestep
-  
-  #MODEL PARAMETERS
-  parameters <- parameters_r()
-  
-  # MODEL INITIAL CONDITIONS
-  H <- input$H
-  X <- input$X
-  #H <- input$initPh #total human population
-  #X <- input$initIh #no of infected people, ideally this should be changing either from the IBM or the ODE model itself
-  #page 75 of A biologist's guide to mathematical modelling
-  
-  #
-  #
-  #initRh <- 0 #no of recovered individuals
+  lam_h <- (M/H)*a*b*(Z/M)
+
+
+
   initSh <- H-X  #+initRh) #no of suscepitables
   
-  M<- input$M 
-  Z<-input$Z
   initS<-M-Z
   initD <- 0
   
-  ##
-  lam_h <- 0
+  ##lam_h <- 0
   lam <- 0
   
   state <- c(Sh= initSh, X = X, lam_h = lam_h, S = initS, Z = Z, lam=lam,Y=0)
-  
+  times <- seq(0,timesteps, by=timeres)
   
   # set up a function to solve the model
   mosQ<-function(t, state, parameters) 
@@ -170,8 +150,8 @@ ode_out <- reactive({
            #dM <- 0
            
            # rate of change for humans
-           dSh <- -lam_h*Sh+(1/(durinf*2))*X #durinf*2 because input was in days and ODE was in .5 days
-           dX <- lam_h*Sh-(1/(durinf*2))*X  #durinf*2 because input was in days and ODE was in .5 days
+           dSh <- -lam_h*Sh+recover*X #durinf*2 because input was in days and ODE was in .5 days
+           dX <- lam_h*Sh-recover*X  #durinf*2 because input was in days and ODE was in .5 days
            #dRh <- (1/durinf)*X-(1/immunity)*Rh
            dY <- 1
            
@@ -181,36 +161,44 @@ ode_out <- reactive({
     ) 
     
   }
-  ode(y = state, times = times, func = mosQ, parms = parameters)
+  out <- ode(y = state, times = times, func = mosQ, parms = parameters)
   
-  #out <- ode(y = state, times = times, func = mosQ, parms = parameters)
-  #out[,]
-})
 
-output$downloadODE <- downloadHandler(
-  #out <- ode_out()
-  filename= function(){paste('summary_ode_',Sys.Date(),'.csv',sep='')},
-  content= function(file){
-    write.csv(ode_out(),file)
-  }
-)
+    write.csv(out,paste('summary_ode_',Sys.Date(),'.csv',sep=''))
 
-output$everything_mosq <- renderPlot({
-  out <- ode_out()
-  par(mar=c(5,4,4,4)) #default is par(mar=c(5,4,4,2))
-  
-  plot(out[,1],out[,5], type="l", col="blue", axes=FALSE, xlab="", ylab="", main="mosq_pop")
-  axis(2, ylim=c(0,17),col="blue") 
-  mtext("Susceptible mosquitoes",side=2,line=2.5) 
-  box()
-  par(new=TRUE)
-  plot(out[,1],out[,6], type="l", col="red", axes=FALSE, xlab="", ylab="")
-  axis(4, ylim=c(0,17),col="red") 
-  mtext("Infected mosquitoes",side=4,line=2.5)
-  
-  axis(1,pretty(range(out[,1]),10))
-  mtext("Time (days)",side=1,col="black",line=2.5)
-  
-  legend("top",legend=c("Susceptibles","Infected"),
-         text.col=c("blue","red"),pch= "__", col=c("blue","red"))
-})
+
+# 
+#   par(mar=c(5,4,4,4)) #default is par(mar=c(5,4,4,2))
+#   
+#   plot(out[,1],out[,5], type="l", col="blue", axes=FALSE, xlab="", ylab="", main="mosq_pop")
+#   axis(2, ylim=c(0,17),col="blue") 
+#   mtext("Susceptible mosquitoes",side=2,line=2.5) 
+#   box()
+#   par(new=TRUE)
+#   plot(out[,1],out[,6], type="l", col="red", axes=FALSE, xlab="", ylab="")
+#   axis(4, ylim=c(0,17),col="red") 
+#   mtext("Infected mosquitoes",side=4,line=2.5)
+#   
+#   axis(1,pretty(range(out[,1]),10))
+#   mtext("Time (days)",side=1,col="black",line=2.5)
+#   
+#   legend("top",legend=c("Susceptibles","Infected"),
+#          text.col=c("blue","red"),pch= "__", col=c("blue","red"))
+
+    #humans ode
+    par(mar=c(5,4,4,4))
+    plot(out[,1],out[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main="human_pop with lambda ")
+    axis(2, ylim=c(0,17),col="blue") 
+    mtext("Susceptible humans",side=2,line=2.5) 
+    
+    box()
+    par(new=TRUE)
+    plot(out[,1],out[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
+    axis(4, ylim=c(0,17),col="red") 
+    mtext("Infected humans",side=4, line=2.5)
+    
+    axis(1,pretty(range(out[,1]),10))
+    mtext("Time (days)",side=1,col="black",line=2.5)
+    
+    legend("top",legend=c("Susceptibles","Infected"),
+           text.col=c("blue","red"),pch= "__", col=c("blue","red"))

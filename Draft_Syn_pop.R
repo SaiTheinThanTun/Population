@@ -84,8 +84,8 @@ total.patch <- no.patch.x*no.patch.y
 
 prob_infected <- prob_recovery <- patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
 
-patch.mosq <- matrix(NA,total.patch,2) #init mosq data on each patch
-patch.mosq <- matrix(rep(c(Z,M),total.patch),total.patch,2, byrow = TRUE)
+#patch.mosq <- matrix(NA,total.patch,3) #init mosq data on each patch
+patch.mosq <- matrix(rep(c(Z,M, M-Z),total.patch),total.patch,3, byrow = TRUE)
 
 df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h, patch.lam_m,prob_infected, prob_recovery)) #variable addition for populated dataframe
 
@@ -134,7 +134,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     M <- patch.mosq[as.numeric(levels(df$patch)),2]
     m <- M/H_patch # M/H, vector for m
     z <- Z/M #Z/M, vector for z
-    S <- M-Z #susceptible mosquitos
+    S <- patch.mosq[as.numeric(levels(df$patch)),3] #M-Z #susceptible mosquitos
     
     #X <- sum(df$infected_h) #no. of infected humans
     #S <- (M-Z) #susceptible mosquitos
@@ -181,8 +181,8 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]]
       
-      df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*j)
-      df$prob_recovery[i] <- 1-exp(-recover*j)
+      df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*k)
+      df$prob_recovery[i] <- 1-exp(-recover*k)
                            
       if(df$infected_h[i]==0){ #if not infected
         if(df$random_no[i]<= df$prob_infected[i]){ #if getting infected #1-exp(-k*t)
@@ -200,12 +200,18 @@ simulate_summ <- function(){#function for subsequent timesteps
     S_prev <- NA
     #for loop for patches
     for(i2 in 1:total.patch){
-      S_prev[i2] <- S[i2]
+      S_prev[i2] <- patch.mosq[i2,3]
       
-      S[i2] <- S_prev[i2]+M[i2]*mui-muo*S_prev[i2]-lam_m_vector[i2]*S_prev[i2]
-      Z[i2] <- Z[i2]+lam_m_vector[i2]*S_prev[i2]-muo*Z[i2]
       
-      M[i2] <- S[i2]+Z[i2]
+      patch.mosq[i2,3] <- S_prev[i2]+M[i2]*mui-muo*S_prev[i2]-lam_m_vector[i2]*S_prev[i2]
+      patch.mosq[i2,1] <- Z[i2]+lam_m_vector[i2]*S_prev[i2]-muo*Z[i2]
+      patch.mosq[i2,2] <- patch.mosq[i2,1] + patch.mosq[i2,3]
+#       S_prev[i2] <- S[i2]
+#       
+#       S[i2] <- S_prev[i2]+M[i2]*mui-muo*S_prev[i2]-lam_m_vector[i2]*S_prev[i2]
+#       Z[i2] <- Z[i2]+lam_m_vector[i2]*S_prev[i2]-muo*Z[i2]
+#       
+#       M[i2] <- S[i2]+Z[i2]
     }
      #recalculating mosquito population
     

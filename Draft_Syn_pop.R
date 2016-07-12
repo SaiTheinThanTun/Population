@@ -157,7 +157,7 @@ simulate_summ <- function(){#function for subsequent timesteps
 #       }
 #     } 
     
-    lam_m_vector <- a*c_*x #1-(1-(a*c))^x #a*c*x ###Reed-Frost
+    lam_m_vector <- a*c_*x*seas  #1-(1-(a*c))^x #a*c*x ###Reed-Frost seasonality into lam_m
     lam_h_vector <- m*a*b*z
     #seas*x #seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i])))
     H_summ <- length(df$infected_h)
@@ -181,8 +181,8 @@ simulate_summ <- function(){#function for subsequent timesteps
       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]]
       
-      df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*k)
-      df$prob_recovery[i] <- 1-exp(-recover*k)
+      df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*timeres)
+      df$prob_recovery[i] <- 1-exp(-recover*timeres)
                            
       if(df$infected_h[i]==0){ #if not infected
         if(df$random_no[i]<= df$prob_infected[i]){ #if getting infected #1-exp(-k*t)

@@ -33,6 +33,7 @@ c_ <- .7 #probability a mosquito becomes infected after biting an infected human
 muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
 mui <- .05
 
+seas_switch <- 0 #logical switch for seasonality
 amp <- .2
 phi <- 210
 magnitude <- .8
@@ -115,7 +116,8 @@ simulate_summ <- function(){#function for subsequent timesteps
   
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
     seas <- amp*cos(2*pi*((j*timeres)-phi)/365)+magnitude #(sin(.01722*timeres*j)*.02)+.2
-    #this is yet to be incorporated
+    seas <- (seas*seas_switch)+(1-seas_switch)
+    #(value*switch) + (1-value)
     
     df$patch <- sample(total.patch,H, replace=TRUE)
     df$patch <- as.factor(df$patch) #,levels=as.character(1:total.patch))

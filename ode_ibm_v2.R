@@ -1,3 +1,23 @@
+#before you run, create a directory named 'wd' under 'C:/'
+#copy 2 csv files: 0to97_age_prob.csv and 0to97_male_prob.csv into the 'C:/wd'
+#copy a generic function file called 'avg_stk_tbl.R' into 'C:/wd/'
+
+#this R script file does the following:
+#1. synthesize a population based upon Myanmar census data 2014, see ####codebook for df#### section for variables
+#2. input parameters are required to synthesize and simulate the population, see ####parameters#### section
+#3. create a function that runs a single simulation and summarize the result on each timestep
+#4. run multiple simulations. you can change #no. of simulations in ####parameters####
+####and create their averages with confidence interval
+#5. write csv files and plot the results
+
+#if more variables are to be added, search for this hashtag #variable addition
+#if output is needed for each timestep, search for and comment out this hashtag #outputting csv
+
+####libraries####
+#library(ggplot2)
+library(deSolve)
+
+#reading in files for census data
 setwd("C:/wd")
 source('avg_stk_tbl.R')
 age_prob <- read.csv("C:/wd/0to97_age_prob.csv", header=FALSE)[,1]
@@ -13,15 +33,16 @@ c_ <- .7 #probability a mosquito becomes infected after biting an infected human
 muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
 mui <- .05
 
+seas_switch <- 1 #logical switch for seasonality
 amp <- .2
 phi <- 210
 magnitude <- .8
 
 
 H <- 80 #human population
-X <- 4 #infected humans
-M <- 80 #initial mosquito population
-Z <- 20 #initial infected mosquitos
+X <- 40 #infected humans
+M <- 80 #800 #initial mosquito population
+Z <- 20 #200 #initial infected mosquitos
 timesteps_days <- 1095 #28
 timeres <- 1 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 
@@ -59,12 +80,11 @@ for(i in 1:H){
   infected_h[i] <- sample(c(0,1),1, prob=c(S_prob,I_prob))
 }
 
-no.patch.x <- 1 #no. of patches across x
-no.patch.y <- 1 #no. of patches across y
+no.patch.x <- 4 #no. of patches across x
+no.patch.y <- 4 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
 
 prob_infected <- prob_recovery <- patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
-
 
 #patch.mosq <- matrix(NA,total.patch,3) #init mosq data on each patch
 patch.mosq <- matrix(rep(c(Z,M, M-Z),total.patch),total.patch,3, byrow = TRUE)
@@ -105,8 +125,12 @@ parameters <- c(
     b = b, #probability of disease transmission per bite for human
     c = c_, ##probability of disease transmission per bite for mosquitos
     #beta = input$beta, #probability of disease transmission per bite for mosquitos
-    recover = recover #duration of infection in days * 2, because of 1/2 day time step
+    recover = recover, #duration of infection in days * 2, because of 1/2 day time step
     #immunity = input$immunity * 2 #duration of immunity * 2, because of 1/2 day time step
+    seas_switch = seas_switch, #logical switch for seasonality
+    amp = amp,
+    phi = phi,
+    magnitude = magnitude
   ))
 
 
@@ -122,7 +146,7 @@ parameters <- c(
   ##lam_h <- 0
   lam <- 0
   
-  state <- c(Sh= initSh, X = X, lam_h = lam_h, S = initS, Z = Z, lam=lam,Y=0)
+  state <- c(Sh= initSh, X = X, lam_h = lam_h, S = initS, Z = Z, lam=lam,Y=0, seas=NA)
   times <- seq(0,timesteps, by=timeres)
   
   # set up a function to solve the model
@@ -138,9 +162,12 @@ parameters <- c(
            z <- Z/M #ratio of infectious mosquitos
            x <- X/H #ratio of infectious humans
            
+           seas <- amp*cos(2*pi*(Y-phi)/365)+magnitude #(sin(.01722*timeres*j)*.02)+.2
+           seas <- (seas*seas_switch)+(1-seas_switch)
+           #(value*switch) + (1-value)
            #seas<-1+amp*cos(2*pi*(Y-phi)/52)
            #beta<-R0*(muo+nui)*gamma/(muo+gamma)
-           lam <- a*c*x
+           lam <- a*c*x*seas
            lam_h <- m*a*b*z
            
            # rate of change for mosquitos
@@ -156,7 +183,7 @@ parameters <- c(
            dY <- 1
            
            # return the rate of change
-           list(c(dSh, dX,lam_h, dS, dZ, lam, dY))
+           list(c(dSh, dX,lam_h, dS, dZ, lam, dY, seas))
          }
     ) 
     

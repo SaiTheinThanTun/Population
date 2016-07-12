@@ -15,6 +15,7 @@
 
 ####libraries####
 #library(ggplot2)
+library(deSolve)
 
 #reading in files for census data
 setwd("C:/wd")
@@ -89,7 +90,6 @@ patch.mosq <- matrix(rep(c(Z,M, M-Z),total.patch),total.patch,3, byrow = TRUE)
 
 df <- as.data.frame(cbind(sim_age,gender,infected_h, random_no, random_no2, patch, patch.lam_h, patch.lam_m,prob_infected, prob_recovery)) #variable addition for populated dataframe
 
-
 ####codebook for df, modify this after finalizing####
 #1. sim_age
 #2. gender
@@ -120,6 +120,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     df$patch <- sample(total.patch,H, replace=TRUE)
     df$patch <- as.factor(df$patch) #,levels=as.character(1:total.patch))
     if(length(levels(df$patch))!=total.patch) print("some patch(es) have no human")
+    df$infected_h <- as.factor(df$infected_h)
     df$random_no <- runif(H)
     df$random_no2 <- runif(H)
       
@@ -146,7 +147,11 @@ simulate_summ <- function(){#function for subsequent timesteps
     ####resolving NA and NaN values
     x[is.na(x)] <- 0
     x[is.nan(x)] <- 0
-    
+    m[is.na(m)] <- 0
+    m[is.nan(m)] <- 0
+    z[is.na(z)] <- 0
+    z[is.nan(z)] <- 0
+    #either above or check the validity of lam_h and lam_m vectors themselves
     
 #     x <- as.vector(by(df$infected_h,df$patch,sum) / by(df$infected_h,df$patch,length)) #this is x by patch
 #     if(!all(1:total.patch %in% unique(df$patch))){ #this solves the situation where no individual is on a particular patch
@@ -161,7 +166,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     lam_h_vector <- m*a*b*z
     #seas*x #seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i])))
     H_summ <- length(df$infected_h)
-    X_summ <- sum(df$infected_h)
+    X_summ <- sum(df$infected_h==1)
     #writing a summary table ###maybe move this up
     #summ_tab[j,1] <- j
     k <- j+1 #because the loop starts from 0

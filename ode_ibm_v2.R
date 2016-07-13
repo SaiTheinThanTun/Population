@@ -27,23 +27,23 @@ age <- 0:(length(age_prob)-1)
 
 ####parameters####
 durinf <- 7 #duration of infection ###may need to readjust when transforming into shiny
-a <- .15 #human blood feeding rate
+a <- .5 #human blood feeding rate
 b <- .3 #probability of disease transmission per bite for human
 c_ <- .7 #probability a mosquito becomes infected after biting an infected human
-muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
-mui <- .05
+muo <- 0 #.05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
+mui <- 0 #.05
 
 seas_switch <- 1 #logical switch for seasonality
 amp <- .2
-phi <- 210
-magnitude <- .8
+phi <- 0
+magnitude <- 1 #.8
 
 
-H <- 80 #human population
-X <- 40 #infected humans
+H <- 300 #human population
+X <- 1 #infected humans
 M <- 80 #800 #initial mosquito population
 Z <- 20 #200 #initial infected mosquitos
-timesteps_days <- 1095 #28
+timesteps_days <- 365 #1095 #28
 timeres <- 1 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 
 no_sims <- 10 #50 #10 #no. of simulations
@@ -114,6 +114,65 @@ legend("top",legend=c("Susceptibles","Infected"),
 ###writing csv 1 simulation####
 write.csv(summ_tab,file=paste('summary_ibm_',Sys.Date(),'.csv',sep=''))
 
+####multiple simulation####
+sims <- list()
+for(i in 1:no_sims){
+  sims[[i]] <- simulate_summ()
+}
+
+#averaging across the list
+avg_sims <- avg_stk_tbl(sims)
+
+# #lower CI (LCI)
+lci_sims <- avg_stk_tbl(sims,'ci',ci=lci)
+
+# #high CI (HCI)
+hci_sims <- avg_stk_tbl(sims,'ci',ci=hci)
+colnames(avg_sims) <- colnames(hci_sims) <- colnames(lci_sims) <- colnames(summ_tab) #c('timesteps','susceptables','infected', 'lam_h','S','Z','lam') #column names for the summary table
+
+par(mar=c(5,4,4,4))
+plot(avg_sims[,1],avg_sims[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("human_pop")) # with lambda",lam_h,"and CI",lci,'-',hci))
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,2], rev(lci_sims[,2])),col=rgb(0,0,100,50,maxColorValue=255), border=NA)
+axis(2, ylim=c(0,17),col="blue") 
+mtext("Susceptible humans",side=2,line=2.5) 
+
+box()
+par(new=TRUE)
+plot(avg_sims[,1],avg_sims[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,3], rev(lci_sims[,3])),col=rgb(100,0,0,50,maxColorValue = 255), border=NA)
+axis(4, ylim=c(0,17),col="red") 
+mtext("Infected humans",side=4, line=2.5)
+
+axis(1,pretty(range(avg_sims[,1]),10))
+mtext("Time",side=1,col="black",line=2.5)
+
+legend("top",legend=c("Susceptibles","Infected"),
+       text.col=c("blue","red"),pch= "__", col=c("blue","red"))
+
+#mosquitos
+par(mar=c(5,4,4,4))
+plot(avg_sims[,1],avg_sims[,5], type="l", col="blue", axes=FALSE, xlab="", ylab="", main=paste("mosquito_pop")) # with lambda",lam_h,"and CI",lci,'-',hci))
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,5], rev(lci_sims[,5])),col=rgb(0,0,100,50,maxColorValue=255), border=NA)
+axis(2, ylim=c(0,17),col="blue") 
+mtext("Susceptible mosquitos",side=2,line=2.5) 
+
+box()
+par(new=TRUE)
+plot(avg_sims[,1],avg_sims[,6], type="l", col="red", axes=FALSE, xlab="", ylab="")
+polygon(c(avg_sims[,1], rev(avg_sims[,1])), c(hci_sims[,6], rev(lci_sims[,6])),col=rgb(100,0,0,50,maxColorValue = 255), border=NA)
+axis(4, ylim=c(0,17),col="red") 
+mtext("Infected mosquitos",side=4, line=2.5)
+
+axis(1,pretty(range(avg_sims[,1]),10))
+mtext("Time",side=1,col="black",line=2.5)
+
+legend("top",legend=c("Susceptibles","Infected"),
+       text.col=c("blue","red"),pch= "__", col=c("blue","red"))
+
+###writing csv_ average of multiple simulations####
+write.csv(avg_sims,file=paste('avg_summary_ibm_',Sys.Date(),'.csv',sep=''))
+
+
 ###end of IBM####
 
 parameters <- c(
@@ -145,8 +204,9 @@ parameters <- c(
   
   ##lam_h <- 0
   lam <- 0
+  #seas_0 <- ((amp*cos(2*pi*(0-phi)/365)+magnitude)*seas_switch)+(1-seas_switch)
   
-  state <- c(Sh= initSh, X = X, lam_h = lam_h, S = initS, Z = Z, lam=lam,Y=0, seas=NA)
+  state <- c(Sh= initSh, X = X, lam_h = lam_h, S = initS, Z = Z, lam=lam,Y=0)
   times <- seq(0,timesteps, by=timeres)
   
   # set up a function to solve the model
@@ -162,8 +222,7 @@ parameters <- c(
            z <- Z/M #ratio of infectious mosquitos
            x <- X/H #ratio of infectious humans
            
-           seas <- amp*cos(2*pi*(Y-phi)/365)+magnitude #(sin(.01722*timeres*j)*.02)+.2
-           seas <- (seas*seas_switch)+(1-seas_switch)
+           seas <- (amp*cos(2*pi*(Y-phi)/365)+magnitude) #*seas_switch)+(1-seas_switch) #(sin(.01722*timeres*j)*.02)+.2
            #(value*switch) + (1-value)
            #seas<-1+amp*cos(2*pi*(Y-phi)/52)
            #beta<-R0*(muo+nui)*gamma/(muo+gamma)
@@ -183,7 +242,7 @@ parameters <- c(
            dY <- 1
            
            # return the rate of change
-           list(c(dSh, dX,lam_h, dS, dZ, lam, dY, seas))
+           list(c(dSh, dX,lam_h, dS, dZ, lam, dY))
          }
     ) 
     
@@ -197,20 +256,20 @@ parameters <- c(
 # 
 #   par(mar=c(5,4,4,4)) #default is par(mar=c(5,4,4,2))
 #   
-#   plot(out[,1],out[,5], type="l", col="blue", axes=FALSE, xlab="", ylab="", main="mosq_pop")
-#   axis(2, ylim=c(0,17),col="blue") 
-#   mtext("Susceptible mosquitoes",side=2,line=2.5) 
-#   box()
-#   par(new=TRUE)
-#   plot(out[,1],out[,6], type="l", col="red", axes=FALSE, xlab="", ylab="")
-#   axis(4, ylim=c(0,17),col="red") 
-#   mtext("Infected mosquitoes",side=4,line=2.5)
-#   
-#   axis(1,pretty(range(out[,1]),10))
-#   mtext("Time (days)",side=1,col="black",line=2.5)
-#   
-#   legend("top",legend=c("Susceptibles","Infected"),
-#          text.col=c("blue","red"),pch= "__", col=c("blue","red"))
+  plot(out[,1],out[,5], type="l", col="blue", axes=FALSE, xlab="", ylab="", main="mosq_pop")
+  axis(2, ylim=c(0,17),col="blue") 
+  mtext("Susceptible mosquitoes",side=2,line=2.5) 
+  box()
+  par(new=TRUE)
+  plot(out[,1],out[,6], type="l", col="red", axes=FALSE, xlab="", ylab="")
+  axis(4, ylim=c(0,17),col="red") 
+  mtext("Infected mosquitoes",side=4,line=2.5)
+  
+  axis(1,pretty(range(out[,1]),10))
+  mtext("Time (days)",side=1,col="black",line=2.5)
+  
+  legend("top",legend=c("Susceptibles","Infected"),
+         text.col=c("blue","red"),pch= "__", col=c("blue","red"))
 
     #humans ode
     par(mar=c(5,4,4,4))

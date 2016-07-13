@@ -80,8 +80,8 @@ for(i in 1:H){
   infected_h[i] <- sample(c(0,1),1, prob=c(S_prob,I_prob))
 }
 
-no.patch.x <- 4 #no. of patches across x
-no.patch.y <- 4 #no. of patches across y
+no.patch.x <- 1 #4 #no. of patches across x
+no.patch.y <- 1 #4 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
 
 prob_infected <- prob_recovery <- patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
@@ -222,7 +222,7 @@ parameters <- c(
            z <- Z/M #ratio of infectious mosquitos
            x <- X/H #ratio of infectious humans
            
-           seas <- (amp*cos(2*pi*(Y-phi)/365)+magnitude) #*seas_switch)+(1-seas_switch) #(sin(.01722*timeres*j)*.02)+.2
+           seas <- ((amp*cos(2*pi*(Y-phi)/365)+magnitude)*seas_switch)+(1-seas_switch) #(sin(.01722*timeres*j)*.02)+.2
            #(value*switch) + (1-value)
            #seas<-1+amp*cos(2*pi*(Y-phi)/52)
            #beta<-R0*(muo+nui)*gamma/(muo+gamma)

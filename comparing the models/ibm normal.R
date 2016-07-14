@@ -35,12 +35,12 @@ mui <- .05
 
 seas_switch <- 0 #logical switch for seasonality
 amp <- .2
-phi <- 210
-magnitude <- .8
+phi <- 0
+magnitude <- 1
 
 
-H <- 80 #human population
-X <- 40 #infected humans
+H <- 300 #human population
+X <- 4 #infected humans
 M <- 80 #800 #initial mosquito population
 Z <- 20 #200 #initial infected mosquitos
 timesteps_days <- 1095 #28
@@ -80,8 +80,8 @@ for(i in 1:H){
   infected_h[i] <- sample(c(0,1),1, prob=c(S_prob,I_prob))
 }
 
-no.patch.x <- 4 #no. of patches across x
-no.patch.y <- 4 #no. of patches across y
+no.patch.x <- 1 #no. of patches across x
+no.patch.y <- 1 #no. of patches across y
 total.patch <- no.patch.x*no.patch.y
 
 prob_infected <- prob_recovery <- patch.lam_m <- patch.lam_h <- patch <- random_no <- random_no2 <- rep(NA, H)
@@ -111,7 +111,7 @@ simulate_summ <- function(){#function for subsequent timesteps
   summ_tab <- matrix(NA, nrow=timesteps+1, ncol=8) # summary table for plotting, +1 because it starts from 0 #variable addition for simulation table
   colnames(summ_tab) <- c('timesteps','susceptables_avg','infected_avg', 'seas','S_avg','Z_avg','lam_m_vector_avg', 'lam_h_vector_avg') #column names for the summary table
   #variable addition for simulation table
-
+  
   summ_tab[,1] <- seq(0,timesteps_days,by=timeres)
   
   for(j in 0:timesteps){ #this means 2:(timesteps+1)
@@ -125,7 +125,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     df$infected_h <- as.factor(df$infected_h)
     df$random_no <- runif(H)
     df$random_no2 <- runif(H)
-      
+    
     
     patch.h <- as.matrix(table(df$patch,df$infected_h))
     if(length(levels(df$infected_h))==1){
@@ -141,6 +141,8 @@ simulate_summ <- function(){#function for subsequent timesteps
       X <- patch.h[,2] 
       H_patch <- (patch.h[,1]+X)
     }
+#     X <- patch.h[,2] 
+#     H_patch <- (patch.h[,1]+X)
     x <- X/H_patch
     
     #this also needs to be changed during the subsequent timesteps
@@ -154,7 +156,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     #S <- (M-Z) #susceptible mosquitos
     #x <- X/H #ratio of infectious humans
     #rate of change of Z from ODE
-
+    
     
     #as df$patch is a vector, there;s no need to check of the consistency with the total.patch
     ####resolving NA and NaN values
@@ -166,14 +168,14 @@ simulate_summ <- function(){#function for subsequent timesteps
     z[is.nan(z)] <- 0
     #either above or check the validity of lam_h and lam_m vectors themselves
     
-#     x <- as.vector(by(df$infected_h,df$patch,sum) / by(df$infected_h,df$patch,length)) #this is x by patch
-#     if(!all(1:total.patch %in% unique(df$patch))){ #this solves the situation where no individual is on a particular patch
-#       putback0 <- which(!(1:total.patch %in% df$patch))
-#       
-#       for(k in 0:(length(putback0)-1)){
-#         x <- append(x,0,after=putback0[k+1]-1)
-#       }
-#     } 
+    #     x <- as.vector(by(df$infected_h,df$patch,sum) / by(df$infected_h,df$patch,length)) #this is x by patch
+    #     if(!all(1:total.patch %in% unique(df$patch))){ #this solves the situation where no individual is on a particular patch
+    #       putback0 <- which(!(1:total.patch %in% df$patch))
+    #       
+    #       for(k in 0:(length(putback0)-1)){
+    #         x <- append(x,0,after=putback0[k+1]-1)
+    #       }
+    #     } 
     
     lam_m_vector <- a*c_*x*seas  #1-(1-(a*c))^x #a*c*x ###Reed-Frost seasonality into lam_m
     lam_h_vector <- m*a*b*z
@@ -194,17 +196,17 @@ simulate_summ <- function(){#function for subsequent timesteps
     
     
     for(i in 1:nrow(df)){
-
+      
       #lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]]
       
       df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*timeres)
       df$prob_recovery[i] <- 1-exp(-recover*timeres)
-                           
+      
       if(df$infected_h[i]==0){ #if not infected
         if(df$random_no[i]<= df$prob_infected[i]){ #if getting infected #1-exp(-k*t)
-            #this calculated for each patch and use here efficiently
+          #this calculated for each patch and use here efficiently
           df$infected_h[i] <- 1
         }
       } else{
@@ -224,14 +226,14 @@ simulate_summ <- function(){#function for subsequent timesteps
       patch.mosq[i2,3] <- S_prev[i2]+M[i2]*mui-muo*S_prev[i2]-lam_m_vector[i2]*S_prev[i2]
       patch.mosq[i2,1] <- Z[i2]+lam_m_vector[i2]*S_prev[i2]-muo*Z[i2]
       patch.mosq[i2,2] <- patch.mosq[i2,1] + patch.mosq[i2,3]
-#       S_prev[i2] <- S[i2]
-#       
-#       S[i2] <- S_prev[i2]+M[i2]*mui-muo*S_prev[i2]-lam_m_vector[i2]*S_prev[i2]
-#       Z[i2] <- Z[i2]+lam_m_vector[i2]*S_prev[i2]-muo*Z[i2]
-#       
-#       M[i2] <- S[i2]+Z[i2]
+      #       S_prev[i2] <- S[i2]
+      #       
+      #       S[i2] <- S_prev[i2]+M[i2]*mui-muo*S_prev[i2]-lam_m_vector[i2]*S_prev[i2]
+      #       Z[i2] <- Z[i2]+lam_m_vector[i2]*S_prev[i2]-muo*Z[i2]
+      #       
+      #       M[i2] <- S[i2]+Z[i2]
     }
-     #recalculating mosquito population
+    #recalculating mosquito population
     
     ######outputting csv of the simulation on each timestep#######
     if(k<20 | k>(max(timesteps)-10)){
@@ -242,7 +244,7 @@ simulate_summ <- function(){#function for subsequent timesteps
 }
 
 summ_tab <- simulate_summ() #this is to be used for plotting a single simulation
-system.time( simulate_summ() )
+#system.time( simulate_summ() )
 
 ####plotting 1 simulation####
 par(mar=c(5,4,4,4))
@@ -325,3 +327,120 @@ legend("top",legend=c("Susceptibles","Infected"),
 
 ###writing csv_ average of multiple simulations####
 write.csv(avg_sims,file=paste('avg_summary_ibm_',Sys.Date(),'.csv',sep=''))
+
+
+###end of IBM####
+
+parameters <- c(
+  c(mui=mui,    # birth #lifespan of mosquito 10 days
+    muo=muo,    # death
+    #beta= #per capita effective contact with infected human per unit time
+    #ce = (.3*.01), #probability of disease transmission per bite * biting rate
+    a = a, #human blood feeding rate
+    b = b, #probability of disease transmission per bite for human
+    c = c_, ##probability of disease transmission per bite for mosquitos
+    #beta = input$beta, #probability of disease transmission per bite for mosquitos
+    recover = 0, #duration of infection in days * 2, because of 1/2 day time step
+    #immunity = input$immunity * 2 #duration of immunity * 2, because of 1/2 day time step
+    seas_switch = seas_switch, #logical switch for seasonality
+    amp = amp,
+    phi = phi,
+    magnitude = magnitude
+  ))
+
+
+lam_h <- (M/H)*a*b*(Z/M)
+
+
+
+initSh <- H-X  #+initRh) #no of suscepitables
+
+initS<-M-Z
+initD <- 0
+
+##lam_h <- 0
+lam <- 0
+#seas_0 <- ((amp*cos(2*pi*(0-phi)/365)+magnitude)*seas_switch)+(1-seas_switch)
+
+state <- c(Sh= initSh, X = X, lam_h = lam_h, S = initS, Z = Z, lam=lam,Y=0)
+times <- seq(0,timesteps, by=timeres)
+
+# set up a function to solve the model
+mosQ<-function(t, state, parameters) 
+{
+  with(as.list(c(state, parameters)),
+       {
+         
+         # define variables
+         M <- (S+Z)
+         H <- (Sh+X)
+         m <- M/H #ratio of mosquitos to humans
+         z <- Z/M #ratio of infectious mosquitos
+         x <- X/H #ratio of infectious humans
+         
+         seas <- ((amp*cos(2*pi*(Y-phi)/365)+magnitude)*seas_switch)+(1-seas_switch) #(sin(.01722*timeres*j)*.02)+.2
+         #(value*switch) + (1-value)
+         #seas<-1+amp*cos(2*pi*(Y-phi)/52)
+         #beta<-R0*(muo+nui)*gamma/(muo+gamma)
+         lam <- a*c*x*seas
+         lam_h <- 0 #m*a*b*z
+         
+         # rate of change for mosquitos
+         dS <- mui*M-muo*S-lam*S
+         dZ <- -muo*Z+lam*S
+         #dD <- muo*S+muo*Z #remove this!!!!
+         #dM <- 0
+         
+         # rate of change for humans
+         dSh <- -lam_h*Sh+recover*X #durinf*2 because input was in days and ODE was in .5 days
+         dX <- lam_h*Sh-recover*X  #durinf*2 because input was in days and ODE was in .5 days
+         #dRh <- (1/durinf)*X-(1/immunity)*Rh
+         dY <- 1
+         
+         # return the rate of change
+         list(c(dSh, dX,lam_h, dS, dZ, lam, dY))
+       }
+  ) 
+  
+}
+out <- ode(y = state, times = times, func = mosQ, parms = parameters)
+
+
+write.csv(out,paste('summary_ode_',Sys.Date(),'.csv',sep=''))
+
+
+# 
+#   par(mar=c(5,4,4,4)) #default is par(mar=c(5,4,4,2))
+#   
+plot(out[,1],out[,5], type="l", col="blue", axes=FALSE, xlab="", ylab="", main="mosq_pop")
+axis(2, ylim=c(0,17),col="blue") 
+mtext("Susceptible mosquitoes",side=2,line=2.5) 
+box()
+par(new=TRUE)
+plot(out[,1],out[,6], type="l", col="red", axes=FALSE, xlab="", ylab="")
+axis(4, ylim=c(0,17),col="red") 
+mtext("Infected mosquitoes",side=4,line=2.5)
+
+axis(1,pretty(range(out[,1]),10))
+mtext("Time (days)",side=1,col="black",line=2.5)
+
+legend("top",legend=c("Susceptibles","Infected"),
+       text.col=c("blue","red"),pch= "__", col=c("blue","red"))
+
+#humans ode
+par(mar=c(5,4,4,4))
+plot(out[,1],out[,2], type="l", col="blue", axes=FALSE, xlab="", ylab="", main="human_pop with lambda ")
+axis(2, ylim=c(0,17),col="blue") 
+mtext("Susceptible humans",side=2,line=2.5) 
+
+box()
+par(new=TRUE)
+plot(out[,1],out[,3], type="l", col="red", axes=FALSE, xlab="", ylab="")
+axis(4, ylim=c(0,17),col="red") 
+mtext("Infected humans",side=4, line=2.5)
+
+axis(1,pretty(range(out[,1]),10))
+mtext("Time (days)",side=1,col="black",line=2.5)
+
+legend("top",legend=c("Susceptibles","Infected"),
+       text.col=c("blue","red"),pch= "__", col=c("blue","red"))

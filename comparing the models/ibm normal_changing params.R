@@ -40,7 +40,7 @@ magnitude <- 1
 
 
 H <- 300 #human population
-X <- 1 #infected humans
+X <- 0 #infected humans
 M <- 800 #800 #initial mosquito population
 Z <- 0 #200 #initial infected mosquitos
 timesteps_days <- 365 #730 # 1095 #28
@@ -129,7 +129,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     
     patch.h <- as.matrix(table(df$patch,df$infected_h))
     if(length(levels(df$infected_h))==1){
-      if(levels(df$infected_h==0)){ #all uninfected
+      if(levels(df$infected_h)==0){ #all uninfected
         X <- 0
         H_patch <- patch.h[,1]
       }

@@ -129,7 +129,7 @@ simulate_summ <- function(){#function for subsequent timesteps
     
     patch.h <- as.matrix(table(df$patch,df$infected_h))
     if(length(levels(df$infected_h))==1){
-      if(levels(df$infected_h==0)){ #all uninfected
+      if(levels(df$infected_h)==0){ #all uninfected
         X <- 0
         H_patch <- patch.h[,1]
       }

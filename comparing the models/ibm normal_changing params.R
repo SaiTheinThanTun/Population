@@ -33,7 +33,7 @@ c_ <- .7 #probability a mosquito becomes infected after biting an infected human
 muo <- .05 ##10 days survival= 20 half-days survival, therefore 1/20=.05
 mui <- .05
 
-seas_switch <- 0 #logical switch for seasonality
+seas_switch <- 1 #logical switch for seasonality
 amp <- .2
 phi <- 200
 magnitude <- 1

@@ -35,14 +35,14 @@ mui <- .05
 
 seas_switch <- 1 #logical switch for seasonality
 amp <- .2
-phi <- 200
+phi <- 0
 magnitude <- 1
 
 
 H <- 300 #human population
 X <- 30 #infected humans
-M <- 80 #800 #initial mosquito population
-Z <- 20 #200 #initial infected mosquitos
+M <- 800 #800 #initial mosquito population
+Z <- 200 #200 #initial infected mosquitos
 timesteps_days <- 365 #730 # 1095 #28
 timeres <- 1 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 

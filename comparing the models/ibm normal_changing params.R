@@ -42,7 +42,7 @@ magnitude <- 1
 H <- 300 #human population
 X <- 1 #infected humans
 M <- 800 #800 #initial mosquito population
-Z <- 5 #200 #initial infected mosquitos
+Z <- 0 #200 #initial infected mosquitos
 timesteps_days <- 365 #730 # 1095 #28
 timeres <- 1 #time resolution of .5 days
 timesteps <- timesteps_days*(1/timeres) #365*2 

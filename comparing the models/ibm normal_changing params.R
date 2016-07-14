@@ -40,7 +40,7 @@ magnitude <- 1
 
 
 H <- 300 #human population
-X <- 30 #infected humans
+X <- 1 #infected humans
 M <- 800 #800 #initial mosquito population
 Z <- 5 #200 #initial infected mosquitos
 timesteps_days <- 365 #730 # 1095 #28

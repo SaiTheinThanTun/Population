@@ -340,7 +340,7 @@ parameters <- c(
     b = b, #probability of disease transmission per bite for human
     c = c_, ##probability of disease transmission per bite for mosquitos
     #beta = input$beta, #probability of disease transmission per bite for mosquitos
-    recover = 0, #duration of infection in days * 2, because of 1/2 day time step
+    recover = recover, #duration of infection in days * 2, because of 1/2 day time step
     #immunity = input$immunity * 2 #duration of immunity * 2, because of 1/2 day time step
     seas_switch = seas_switch, #logical switch for seasonality
     amp = amp,
@@ -383,7 +383,7 @@ mosQ<-function(t, state, parameters)
          #seas<-1+amp*cos(2*pi*(Y-phi)/52)
          #beta<-R0*(muo+nui)*gamma/(muo+gamma)
          lam <- a*c*x*seas
-         lam_h <- 0 #m*a*b*z
+         lam_h <- m*a*b*z
          
          # rate of change for mosquitos
          dS <- mui*M-muo*S-lam*S

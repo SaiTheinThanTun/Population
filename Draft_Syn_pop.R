@@ -201,7 +201,7 @@ simulate_summ <- function(){#function for subsequent timesteps
       
       #lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
 #       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
-#       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]] #this is not even used!!!
+#       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]] #this is not even used! just for info storage in df
 #       
 #       df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*timeres)
 #       df$prob_recovery[i] <- 1-exp(-recover*timeres)

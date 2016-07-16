@@ -16,6 +16,8 @@
 ####libraries####
 #library(ggplot2)
 library(deSolve)
+library(Rcpp)
+sourceCpp("D:/OneDrive/Rcpp/Rcpp-tryouts/infectedornot.cpp")
 
 #reading in files for census data
 setwd("C:/wd")
@@ -193,31 +195,34 @@ simulate_summ <- function(){#function for subsequent timesteps
     summ_tab[k,7] <- mean(lam_m_vector)
     summ_tab[k,8] <- mean(df$prob_infected) #, na.rm=TRUE) #mean(prob_recovery) #mean(lam_h_vector)
     
-    df$prob_infected <- 1-exp(-lam_h_vector*timeres)
-    df$prob_recovery <- rep(1-exp(-recover*timeres),nrow(df)) #this works only for constant recovery rate 
+    prob_infected <- 1-exp(-lam_h_vector*timeres)
+    prob_recovery <- rep(1-exp(-recover*timeres),nrow(df)) #this works only for constant recovery rate 
     #on all people
+    changed2numeric <- as.numeric(levels(df$infected_h))[df$infected_h] #to be compatible with input to c++
     
-    for(i in 1:nrow(df)){
-      
-      #lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
-#       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
-#       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]] #this is not even used! just for info storage in df
+    df$infected_h <- as.factor(infectedornot(prob_infected,prob_recovery,df$patch, changed2numeric, df$random_no, df$random_no2))
+#     
+#     for(i in 1:nrow(df)){
 #       
-#       df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*timeres)
-#       df$prob_recovery[i] <- 1-exp(-recover*timeres)
-      
-      if(df$infected_h[i]==0){ #if not infected
-        if(df$random_no[i]<= df$prob_infected[df$patch[i]]){ #if getting infected #1-exp(-k*t)
-          #this calculated for each patch and use here efficiently
-          df$infected_h[i] <- 1
-        }
-      } else{
-        if(df$random_no2[i]<= df$prob_recovery[df$patch[i]]){ #if infected, but getting recovered
-          df$infected_h[i] <- 0
-        }
-      }
-    }
-    
+#       #lam_h <- seas*(sum(df[which(df$patch==df$patch[i]),]$infected_h)/length(which(df$patch==df$patch[i]))) #infectedpersonsSamePatch
+# #       df$patch.lam_h[i] <- lam_h_vector[df$patch[i]]
+# #       df$patch.lam_m[i] <- lam_m_vector[df$patch[i]] #this is not even used! just for info storage in df
+# #       
+# #       df$prob_infected[i] <- 1-exp(-df$patch.lam_h[i]*timeres)
+# #       df$prob_recovery[i] <- 1-exp(-recover*timeres)
+#       
+#       if(df$infected_h[i]==0){ #if not infected
+#         if(df$random_no[i]<= df$prob_infected[df$patch[i]]){ #if getting infected #1-exp(-k*t)
+#           #this calculated for each patch and use here efficiently
+#           df$infected_h[i] <- 1
+#         }
+#       } else{
+#         if(df$random_no2[i]<= df$prob_recovery[df$patch[i]]){ #if infected, but getting recovered
+#           df$infected_h[i] <- 0
+#         }
+#       }
+#     }
+#     
     
     S_prev <- NA
     #for loop for patches

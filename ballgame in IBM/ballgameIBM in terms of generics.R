@@ -74,15 +74,19 @@ no.of.timesteps <- 10
 #define lambda outside for loop for the first value
 lambda = beta*sum(pop2[,2],pop2[,3])/sum(pop2)
 for(i in 1:10){ #for.ibm(eval)
-  T1 <- state.trans(1,2,lambda,pop2) 
-  T1new <- T1[,c(1,2)]+matrix(0,nrow(T1),ncol(T1)) 
-  T2 <- state.trans(2,3,100,pop2) 
-  T2new <- T2[,c(2,3)]+matrix(0,nrow(T2),ncol(T2)) 
-  T3 <- state.trans(3,4,100,pop2) 
-  T3new <- T3[,c(3,4)]+matrix(0,nrow(T3),ncol(T3)) 
+#   T1 <- state.trans(1,2,lambda,pop2) 
+#   #T1new <- T1[,c(1,2)]+matrix(0,nrow(T1),ncol(T1)) 
+#   T2 <- state.trans(2,3,100,pop2) 
+#   #T2new <- T2[,c(2,3)]+matrix(0,nrow(T2),ncol(T2)) 
+#   T3 <- state.trans(3,4,100,pop2) 
+#   #T3new <- T3[,c(3,4)]+matrix(0,nrow(T3),ncol(T3)) 
+#   
+  pop2 <- state.trans(3,4,100,pop2) 
+  pop2 <- state.trans(2,3,100,pop2)
+  pop2 <- state.trans(1,2,lambda,pop2) 
   
   #sum of different states for the end of the timestep
-  pop2 <- T1new+T2new+T3new
+  # pop2 <- T1+T2+T3
   lambda = beta*sum(pop2[,2],pop2[,3])/sum(pop2)
 }
 pop2
